@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface_background">
+
+    <!-- Gradient header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_purple_gradient"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vendor Suggestions"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressVendors"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="32dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvNoVendors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No vendors found for these options.\nTry a different location."
+        android:textSize="15sp"
+        android:gravity="center"
+        android:padding="32dp"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerVendors"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="12dp" />
+
+</LinearLayout>

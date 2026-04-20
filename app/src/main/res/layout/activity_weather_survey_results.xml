@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface_background"
+    tools:context=".WeatherSurveyResultsActivity">
+
+    <!-- Gradient header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_purple_gradient"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/tvWeatherTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose your event date"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tvWeatherSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Tap a day to select it and set the event times."
+            android:textSize="13sp"
+            android:textColor="#DDFFFFFF" />
+
+    </LinearLayout>
+
+    <!-- Loading indicator -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="32dp"
+        android:visibility="gone" />
+
+    <!-- Error / empty message -->
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp"
+        android:textAlignment="center"
+        android:textColor="@android:color/holo_red_dark"
+        android:visibility="gone" />
+
+    <!-- Per-day weather cards -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/llDayContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp" />
+
+    </ScrollView>
+
+    <!-- Fallback save button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSaveEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_button_primary"
+        android:text="Save Event"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:backgroundTint="@null" />
+
+</LinearLayout>

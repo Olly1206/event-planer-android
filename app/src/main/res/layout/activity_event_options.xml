@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface_background"
+    tools:context=".EventOptionsActivity">
+
+    <!-- Gradient header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_purple_gradient"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/textViewOptionsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Event Details"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Title & Location card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilEventTitle"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:hint="Event Title *">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etEventTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLocationName"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:hint="City / Venue (type to search)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLocationName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Venue search radius"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary" />
+
+                        <Spinner
+                            android:id="@+id/spinnerRadius"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="140dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnBrowseVenues"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:enabled="false"
+                        android:text="Browse Venue Suggestions"
+                        app:strokeColor="@color/brand_purple_primary"
+                        android:textColor="@color/brand_purple_primary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Options card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Event Options"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="8dp" />
+
+                    <CheckBox
+                        android:id="@+id/cbOutside"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Outside event"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbInside"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Inside event"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbInternal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Internal Event"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbExternal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="External Event"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbCatering"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Catering needed"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbMusic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Music needed"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbGuestSpeakers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Guest speakers needed"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbSecurity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="Security needed"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                    <CheckBox
+                        android:id="@+id/cbEquipment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="AV/Technical Equipment needed"
+                        android:textSize="15sp"
+                        android:textColor="@color/text_primary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Finalize button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@color/surface_card">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFinalize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_button_primary"
+            android:text="Finalize Selection"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            app:backgroundTint="@null" />
+
+    </LinearLayout>
+
+</LinearLayout>

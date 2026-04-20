@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface_background"
+    tools:context=".TimeframeSelectionActivity">
+
+    <!-- Gradient header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_purple_gradient"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/textViewTimeframeTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="When should it happen?"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Pick a date range — we'll show the weather forecast"
+            android:textSize="13sp"
+            android:textColor="#DDFFFFFF"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"
+                        android:text="Earliest possible date"
+                        android:textSize="14sp"
+                        android:textColor="@color/brand_purple_primary"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnStartDate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        android:text="Pick Date"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:strokeColor="@color/brand_purple_primary"
+                        android:textColor="@color/brand_purple_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"
+                        android:text="Latest possible date"
+                        android:textSize="14sp"
+                        android:textColor="@color/brand_purple_primary"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnEndDate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pick Date"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:strokeColor="@color/brand_purple_primary"
+                        android:textColor="@color/brand_purple_primary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/textViewSelectedDates"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp"
+                android:text="No timeframe selected"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom action -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@color/surface_card">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCreateSurvey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_button_primary"
+            android:text="Show Weather Forecast"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            app:backgroundTint="@null" />
+
+    </LinearLayout>
+
+</LinearLayout>
