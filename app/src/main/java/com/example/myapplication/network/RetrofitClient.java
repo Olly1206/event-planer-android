@@ -13,14 +13,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     /**
-     * BASE_URL — change this depending on how you're running the app:
-     *
+     * BASE_URL — points to Render production backend
+     * For local development, change to:
      *   Android Emulator  →  http://10.0.2.2:8080/
-     *   Physical device (same Wi-Fi as your dev machine)  →  http://<your-machine-LAN-IP>:8080/
-     *
-     * Find your LAN IP with:  ip addr show | grep "inet " (Linux)
+     *   Physical device (same Wi-Fi as dev machine)  →  http://<your-machine-LAN-IP>:8080/
      */
-    private static final String BASE_URL = "http://192.168.178.23:8080/";  // Private Wi-Fi LAN IP
+    private static final String BASE_URL = "https://event-planer-backend.onrender.com/";  // Render production
 
     private static Retrofit instance;
 
