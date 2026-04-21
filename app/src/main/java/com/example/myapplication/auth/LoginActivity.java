@@ -22,7 +22,7 @@ import retrofit2.Response;
 public class LoginActivity extends BaseActivity {
 
     private TextInputEditText etEmail, etPassword;
-    private Button btnLogin, btnGoToRegister;
+    private Button btnLogin, btnGoToRegister, btnGuestLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +40,15 @@ public class LoginActivity extends BaseActivity {
         etPassword     = findViewById(R.id.etPassword);
         btnLogin       = findViewById(R.id.btnLogin);
         btnGoToRegister = findViewById(R.id.btnGoToRegister);
+        btnGuestLogin  = findViewById(R.id.btnGuestLogin);
 
         btnLogin.setOnClickListener(v -> attemptLogin());
 
         btnGoToRegister.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
         });
+
+        btnGuestLogin.setOnClickListener(v -> attemptGuestLogin());
     }
 
     private void attemptLogin() {
@@ -87,5 +90,33 @@ public class LoginActivity extends BaseActivity {
     private void goToMain() {
         startActivity(new Intent(this, MainActivity.class));
         finish();
+    }
+
+    private void attemptGuestLogin() {
+        btnGuestLogin.setEnabled(false);
+
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.loginAsGuest().enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                btnGuestLogin.setEnabled(true);
+                if (response.isSuccessful() && response.body() != null) {
+                    AuthResponse body = response.body();
+                    AuthManager.getInstance(LoginActivity.this)
+                               .saveSession(body.token, body.userId, body.username, body.role);
+                    goToMain();
+                } else {
+                    Toast.makeText(LoginActivity.this,
+                            "Guest login failed — please try again", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                btnGuestLogin.setEnabled(true);
+                Toast.makeText(LoginActivity.this,
+                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

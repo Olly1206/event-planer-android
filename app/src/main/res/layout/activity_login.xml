@@ -92,6 +92,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
                         android:text="Create Account"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btnGuestLogin"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="Continue as Guest"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
                 </LinearLayout>

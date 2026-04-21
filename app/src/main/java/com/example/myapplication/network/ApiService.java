@@ -32,6 +32,9 @@ public interface ApiService {
     @POST("api/auth/login")
     Call<AuthResponse> login(@Body LoginRequest request);
 
+    @POST("api/auth/guest")
+    Call<AuthResponse> loginAsGuest();
+
     // ── Events ─────────────────────────────────────────────────────────────────
 
     @POST("api/events")

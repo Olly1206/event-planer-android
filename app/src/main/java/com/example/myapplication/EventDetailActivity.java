@@ -158,7 +158,12 @@ public class EventDetailActivity extends BaseActivity {
             btnVendorSuggestions.setVisibility(View.VISIBLE);
             btnVendorSuggestions.setOnClickListener(v -> {
                 Intent intent = new Intent(this, VendorSuggestionsActivity.class);
-                intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, event.locationName);
+                // Extract clean city name from locationName (before the radius part in parentheses)
+                String cityName = event.locationName;
+                if (cityName.contains("(")) {
+                    cityName = cityName.substring(0, cityName.indexOf("(")).trim();
+                }
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, cityName);
                 intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS,
                         new ArrayList<>(event.selectedOptions));
                 startActivity(intent);
