@@ -250,12 +250,22 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
             public void onResponse(@NonNull Call<EventResponse> call,
                                    @NonNull Response<EventResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    EventResponse createdEvent = response.body();
                     Toast.makeText(WeatherSurveyResultsActivity.this,
                             "\"" + eventTitle + "\" created!", Toast.LENGTH_SHORT).show();
-                    // Return to the event list
-                    Intent intent = new Intent(WeatherSurveyResultsActivity.this, MainActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(intent);
+                    
+                    // Navigate to vendor selection if event has options
+                    if (selectedOptions != null && !selectedOptions.isEmpty()) {
+                        Intent intent = new Intent(WeatherSurveyResultsActivity.this, VendorSuggestionsActivity.class);
+                        intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, locationCity);
+                        intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS, selectedOptions);
+                        startActivity(intent);
+                    } else {
+                        // No options selected, go back to event list
+                        Intent intent = new Intent(WeatherSurveyResultsActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
                 } else {
                     String errorDetail = response.message();
                     if (response.errorBody() != null) {
