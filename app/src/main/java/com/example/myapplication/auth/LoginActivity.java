@@ -12,6 +12,7 @@ import com.example.myapplication.R;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.AuthResponse;
+import com.example.myapplication.network.dto.GuestAuthResponse;
 import com.example.myapplication.network.dto.LoginRequest;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -96,14 +97,15 @@ public class LoginActivity extends BaseActivity {
         btnGuestLogin.setEnabled(false);
 
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
-        api.loginAsGuest().enqueue(new Callback<AuthResponse>() {
+        api.loginAsGuest().enqueue(new Callback<GuestAuthResponse>() {
             @Override
-            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+            public void onResponse(Call<GuestAuthResponse> call, Response<GuestAuthResponse> response) {
                 btnGuestLogin.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
-                    AuthResponse body = response.body();
+                    GuestAuthResponse body = response.body();
+                    // Save guest session with default guest credentials
                     AuthManager.getInstance(LoginActivity.this)
-                               .saveSession(body.token, body.userId, body.username, body.role);
+                               .saveSession(body.token, body.id, "Guest", "GUEST");
                     goToMain();
                 } else {
                     Toast.makeText(LoginActivity.this,
@@ -112,7 +114,7 @@ public class LoginActivity extends BaseActivity {
             }
 
             @Override
-            public void onFailure(Call<AuthResponse> call, Throwable t) {
+            public void onFailure(Call<GuestAuthResponse> call, Throwable t) {
                 btnGuestLogin.setEnabled(true);
                 Toast.makeText(LoginActivity.this,
                         "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();

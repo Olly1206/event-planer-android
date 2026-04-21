@@ -3,6 +3,7 @@ package com.example.myapplication.network;
 import com.example.myapplication.network.dto.AuthResponse;
 import com.example.myapplication.network.dto.CreateEventRequest;
 import com.example.myapplication.network.dto.EventResponse;
+import com.example.myapplication.network.dto.GuestAuthResponse;
 import com.example.myapplication.network.dto.LoginRequest;
 import com.example.myapplication.network.dto.NamedItemResponse;
 import com.example.myapplication.network.dto.RegisterRequest;
@@ -33,7 +34,7 @@ public interface ApiService {
     Call<AuthResponse> login(@Body LoginRequest request);
 
     @POST("api/auth/guest")
-    Call<AuthResponse> loginAsGuest();
+    Call<GuestAuthResponse> loginAsGuest();
 
     // ── Events ─────────────────────────────────────────────────────────────────
 
