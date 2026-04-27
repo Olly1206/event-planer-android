@@ -10,15 +10,35 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myapplication.R;
 import com.example.myapplication.network.dto.VendorResponse;
+import com.google.android.material.button.MaterialButton;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder> {
 
-    private final List<VendorResponse> vendors;
+    public interface Listener {
+        void onVendorClicked(VendorResponse vendor);
+        void onVendorActionClicked(VendorResponse vendor);
+    }
 
-    public VendorAdapter(List<VendorResponse> vendors) {
+    private final List<VendorResponse> vendors;
+    private final boolean showActionButton;
+    private final Set<Long> addedVendorIds;
+    private final Listener listener;
+
+    public VendorAdapter(List<VendorResponse> vendors, Listener listener) {
+        this(vendors, false, new HashSet<>(), listener);
+    }
+
+    public VendorAdapter(List<VendorResponse> vendors, boolean showActionButton,
+                         Set<Long> addedVendorIds, Listener listener) {
         this.vendors = vendors;
+        this.showActionButton = showActionButton;
+        this.addedVendorIds = addedVendorIds;
+        this.listener = listener;
     }
 
     @NonNull
@@ -65,11 +85,47 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
         } else {
             holder.tvHours.setVisibility(View.GONE);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onVendorClicked(vendor);
+            }
+        });
+
+        if (showActionButton) {
+            boolean alreadyAdded = vendor.osmId != null && addedVendorIds.contains(vendor.osmId);
+            holder.btnAction.setVisibility(View.VISIBLE);
+            holder.btnAction.setEnabled(!alreadyAdded);
+            holder.btnAction.setText(alreadyAdded ? "Added" : "Add to Event");
+            holder.btnAction.setOnClickListener(v -> {
+                if (!alreadyAdded && listener != null) {
+                    listener.onVendorActionClicked(vendor);
+                }
+            });
+        } else {
+            holder.btnAction.setVisibility(View.GONE);
+            holder.btnAction.setOnClickListener(null);
+        }
     }
 
     @Override
     public int getItemCount() {
         return vendors.size();
+    }
+
+    public void setAddedVendorIds(Collection<Long> vendorIds) {
+        addedVendorIds.clear();
+        if (vendorIds != null) {
+            addedVendorIds.addAll(vendorIds);
+        }
+        notifyDataSetChanged();
+    }
+
+    public void markVendorAdded(Long vendorId) {
+        if (vendorId != null) {
+            addedVendorIds.add(vendorId);
+            notifyDataSetChanged();
+        }
     }
 
     private String formatCategory(String raw) {
@@ -79,6 +135,7 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvCategory, tvAddress, tvPhone, tvWebsite, tvHours;
+        MaterialButton btnAction;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -88,6 +145,7 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
             tvPhone    = itemView.findViewById(R.id.tvVendorPhone);
             tvWebsite  = itemView.findViewById(R.id.tvVendorWebsite);
             tvHours    = itemView.findViewById(R.id.tvVendorHours);
+            btnAction  = itemView.findViewById(R.id.btnVendorAction);
         }
     }
 }

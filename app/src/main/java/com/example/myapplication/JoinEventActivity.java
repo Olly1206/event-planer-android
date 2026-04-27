@@ -58,7 +58,7 @@ public class JoinEventActivity extends BaseActivity {
             return;
         }
 
-        if (!AuthManager.getInstance(this).isLoggedIn()) {
+        if (!AuthManager.getInstance(this).hasActiveSession()) {
             // Save the token so LoginActivity can complete the join after auth
             Intent loginIntent = new Intent(this, LoginActivity.class);
             loginIntent.putExtra(EXTRA_PENDING_TOKEN, token);
@@ -108,6 +108,13 @@ public class JoinEventActivity extends BaseActivity {
                 if (response.isSuccessful()) {
                     Toast.makeText(JoinEventActivity.this,
                             "Joined event!", Toast.LENGTH_SHORT).show();
+                } else if (response.code() == 401 || response.code() == 403) {
+                    AuthManager.getInstance(JoinEventActivity.this).clearSession();
+                    Intent loginIntent = new Intent(JoinEventActivity.this, LoginActivity.class);
+                    loginIntent.putExtra(EXTRA_PENDING_TOKEN, token);
+                    startActivity(loginIntent);
+                    finish();
+                    return;
                 } else if (response.code() == 409 || response.code() == 400) {
                     // Already a member — that's fine, just navigate
                     Toast.makeText(JoinEventActivity.this,

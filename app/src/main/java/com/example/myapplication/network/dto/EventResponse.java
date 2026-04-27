@@ -1,5 +1,6 @@
 package com.example.myapplication.network.dto;
 
+import java.util.List;
 import java.util.Set;
 
 public class EventResponse {
@@ -17,6 +18,7 @@ public class EventResponse {
     public String organiserUsername;
     public String eventTypeName;
     public Set<String> selectedOptions;
+    public List<VendorResponse> selectedVendors;
     public String visibility;       // "PUBLIC" or "PRIVATE"
     public String createdAt;
     public String inviteToken;       // only present for organiser/admins

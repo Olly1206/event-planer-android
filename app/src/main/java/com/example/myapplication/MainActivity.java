@@ -10,7 +10,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -47,7 +46,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         // Guard: redirect to login if not authenticated
-        if (!AuthManager.getInstance(this).isLoggedIn()) {
+        if (!AuthManager.getInstance(this).hasActiveSession()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
@@ -119,22 +118,24 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (AuthManager.getInstance(this).isLoggedIn()) {
-            int checkedId = chipGroupFilter.getCheckedChipId();
-            if (checkedId == R.id.chipJoined) {
-                loadJoinedEvents();
-            } else if (checkedId == R.id.chipDiscover) {
-                loadAllPublicEvents();
-            } else {
-                loadCreatedEvents();
-            }
+        if (!AuthManager.getInstance(this).hasActiveSession()) {
+            redirectToLogin();
+            return;
+        }
+
+        int checkedId = chipGroupFilter.getCheckedChipId();
+        if (checkedId == R.id.chipJoined) {
+            loadJoinedEvents();
+        } else if (checkedId == R.id.chipDiscover) {
+            loadAllPublicEvents();
+        } else {
+            loadCreatedEvents();
         }
     }
 
     private void loadCreatedEvents() {
-        Long userId = AuthManager.getInstance(this).getUserId();
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
-        api.getMyEvents(userId).enqueue(new Callback<List<EventResponse>>() {
+        api.getCreatedEvents().enqueue(new Callback<List<EventResponse>>() {
             @Override
             public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -154,8 +155,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showNetworkFailure(t);
             }
         });
     }
@@ -182,8 +182,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showNetworkFailure(t);
             }
         });
     }
@@ -210,8 +209,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showNetworkFailure(t);
             }
         });
     }
@@ -234,8 +232,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showNetworkFailure(t);
             }
         });
     }
@@ -246,6 +243,14 @@ public class MainActivity extends BaseActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+        finish();
+    }
+
+    private void showNetworkFailure(Throwable t) {
+        String message = t != null && t.getMessage() != null
+                ? t.getMessage()
+                : "Cannot reach server right now";
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     private void updateUI() {

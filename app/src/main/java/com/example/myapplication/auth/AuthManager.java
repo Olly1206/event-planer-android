@@ -2,6 +2,11 @@ package com.example.myapplication.auth;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Single source of truth for authentication state.
@@ -48,6 +53,50 @@ public class AuthManager {
 
     public boolean isLoggedIn() {
         return getToken() != null;
+    }
+
+    public boolean hasActiveSession() {
+        String token = getToken();
+        if (token == null) {
+            return false;
+        }
+
+        long expiryMs = getTokenExpiryEpochMs(token);
+        if (expiryMs > 0 && System.currentTimeMillis() >= expiryMs) {
+            clearSession();
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isTokenExpired() {
+        String token = getToken();
+        if (token == null) {
+            return true;
+        }
+
+        long expiryMs = getTokenExpiryEpochMs(token);
+        return expiryMs > 0 && System.currentTimeMillis() >= expiryMs;
+    }
+
+    private long getTokenExpiryEpochMs(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) {
+                return -1L;
+            }
+
+            byte[] decoded = Base64.decode(parts[1], Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            String payload = new String(decoded, StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(payload);
+            if (!json.has("exp")) {
+                return -1L;
+            }
+
+            return json.getLong("exp") * 1000L;
+        } catch (Exception ignored) {
+            return -1L;
+        }
     }
 
     public String getToken()    { return prefs.getString(KEY_TOKEN, null); }

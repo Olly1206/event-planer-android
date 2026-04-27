@@ -1,17 +1,12 @@
 package com.example.myapplication.network.dto;
 
-public class VendorResponse {
+public class SaveEventVendorRequest {
     public Long osmId;
     public String name;
     public String address;
-    public Double lat;
-    public Double lon;
-    public Integer distanceMeters;
     public String category;
     public String optionName;
-    public java.util.List<String> matchedOptions;
     public String website;
     public String email;
     public String phone;
-    public String openingHours;
 }

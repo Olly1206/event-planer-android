@@ -1,12 +1,14 @@
 package com.example.myapplication.auth;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.myapplication.BaseActivity;
+import com.example.myapplication.JoinEventActivity;
 import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
 import com.example.myapplication.network.ApiService;
@@ -30,8 +32,8 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         // If already logged in, skip straight to MainActivity
-        if (AuthManager.getInstance(this).isLoggedIn()) {
-            goToMain();
+        if (AuthManager.getInstance(this).hasActiveSession()) {
+            goToPostLoginDestination();
             return;
         }
 
@@ -72,7 +74,7 @@ public class LoginActivity extends BaseActivity {
                     AuthResponse body = response.body();
                     AuthManager.getInstance(LoginActivity.this)
                                .saveSession(body.token, body.userId, body.username, body.role);
-                    goToMain();
+                    goToPostLoginDestination();
                 } else {
                     Toast.makeText(LoginActivity.this,
                             "Login failed — check your email and password", Toast.LENGTH_SHORT).show();
@@ -88,8 +90,15 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
-    private void goToMain() {
-        startActivity(new Intent(this, MainActivity.class));
+    private void goToPostLoginDestination() {
+        String pendingToken = getIntent().getStringExtra(JoinEventActivity.EXTRA_PENDING_TOKEN);
+        if (pendingToken != null && !pendingToken.isEmpty()) {
+            Intent joinIntent = new Intent(this, JoinEventActivity.class);
+            joinIntent.setData(Uri.parse("eventplanner://join/" + pendingToken));
+            startActivity(joinIntent);
+        } else {
+            startActivity(new Intent(this, MainActivity.class));
+        }
         finish();
     }
 
@@ -106,7 +115,7 @@ public class LoginActivity extends BaseActivity {
                     // Save guest session with default guest credentials
                     AuthManager.getInstance(LoginActivity.this)
                                .saveSession(body.token, body.id, "Guest", "GUEST");
-                    goToMain();
+                    goToPostLoginDestination();
                 } else {
                     Toast.makeText(LoginActivity.this,
                             "Guest login failed — please try again", Toast.LENGTH_SHORT).show();

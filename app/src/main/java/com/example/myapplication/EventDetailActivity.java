@@ -6,14 +6,20 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.myapplication.adapter.VendorAdapter;
 import com.example.myapplication.auth.AuthManager;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.EventResponse;
+import com.example.myapplication.network.dto.VendorResponse;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,9 +38,12 @@ import retrofit2.Response;
 public class EventDetailActivity extends BaseActivity {
 
     private TextView tvTitle, tvOrganiser, tvDate, tvLocation, tvType,
-                     tvStatus, tvParticipants, tvOptions, tvDescription;
+                     tvStatus, tvParticipants, tvOptions, tvDescription, tvNoSelectedVendors;
     private MaterialButton btnShareInvite, btnEditEvent, btnDeleteEvent,
                            btnLeaveEvent, btnVendorSuggestions;
+    private RecyclerView recyclerSelectedVendors;
+    private final List<VendorResponse> selectedVendors = new ArrayList<>();
+    private VendorAdapter selectedVendorAdapter;
     private long eventId;
 
     @Override
@@ -56,14 +65,36 @@ public class EventDetailActivity extends BaseActivity {
         btnDeleteEvent = findViewById(R.id.btnDeleteEvent);
         btnLeaveEvent  = findViewById(R.id.btnLeaveEvent);
         btnVendorSuggestions = findViewById(R.id.btnVendorSuggestions);
+        tvNoSelectedVendors = findViewById(R.id.tvNoSelectedVendors);
+        recyclerSelectedVendors = findViewById(R.id.recyclerSelectedVendors);
+
+        selectedVendorAdapter = new VendorAdapter(selectedVendors, new VendorAdapter.Listener() {
+            @Override
+            public void onVendorClicked(VendorResponse vendor) {
+                VendorDetailsDialog.show(EventDetailActivity.this, vendor);
+            }
+
+            @Override
+            public void onVendorActionClicked(VendorResponse vendor) {
+            }
+        });
+        recyclerSelectedVendors.setLayoutManager(new LinearLayoutManager(this));
+        recyclerSelectedVendors.setNestedScrollingEnabled(false);
+        recyclerSelectedVendors.setAdapter(selectedVendorAdapter);
 
         eventId = getIntent().getLongExtra("eventId", -1);
         if (eventId == -1) {
             finish();
             return;
         }
+    }
 
-        loadEvent(eventId);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (eventId != -1) {
+            loadEvent(eventId);
+        }
     }
 
     private void loadEvent(long eventId) {
@@ -111,6 +142,19 @@ public class EventDetailActivity extends BaseActivity {
             tvOptions.setVisibility(View.GONE);
         }
 
+        selectedVendors.clear();
+        if (event.selectedVendors != null) {
+            selectedVendors.addAll(event.selectedVendors);
+        }
+        selectedVendorAdapter.notifyDataSetChanged();
+        if (selectedVendors.isEmpty()) {
+            recyclerSelectedVendors.setVisibility(View.GONE);
+            tvNoSelectedVendors.setVisibility(View.VISIBLE);
+        } else {
+            recyclerSelectedVendors.setVisibility(View.VISIBLE);
+            tvNoSelectedVendors.setVisibility(View.GONE);
+        }
+
         if (event.description != null && !event.description.isEmpty()) {
             tvDescription.setText(event.description);
             tvDescription.setVisibility(View.VISIBLE);
@@ -156,6 +200,7 @@ public class EventDetailActivity extends BaseActivity {
         if (event.selectedOptions != null && !event.selectedOptions.isEmpty()
                 && event.locationName != null && !event.locationName.isEmpty()) {
             btnVendorSuggestions.setVisibility(View.VISIBLE);
+            btnVendorSuggestions.setText(canManage ? "Add Vendors" : "Vendor Suggestions");
             btnVendorSuggestions.setOnClickListener(v -> {
                 Intent intent = new Intent(this, VendorSuggestionsActivity.class);
                 // Extract clean city name from locationName (before the radius part in parentheses)
@@ -164,10 +209,19 @@ public class EventDetailActivity extends BaseActivity {
                     cityName = cityName.substring(0, cityName.indexOf("(")).trim();
                 }
                 intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, cityName);
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_EVENT_ID, event.id);
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_ALLOW_ADD, canManage);
                 intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS,
                         new ArrayList<>(event.selectedOptions));
+                long[] selectedIds = selectedVendors.stream()
+                        .filter(vendor -> vendor.osmId != null)
+                        .mapToLong(vendor -> vendor.osmId)
+                        .toArray();
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_SELECTED_VENDOR_IDS, selectedIds);
                 startActivity(intent);
             });
+        } else {
+            btnVendorSuggestions.setVisibility(View.GONE);
         }
 
         // Delete button — organiser or admin
@@ -250,11 +304,11 @@ public class EventDetailActivity extends BaseActivity {
     }
 
     private void shareInviteLink(String token) {
-        String deepLink = "eventplanner://join/" + token;
+        String invitePageUrl = RetrofitClient.getBaseUrl() + "invite/" + token;
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT,
-                "Join my event! Open this link: " + deepLink);
+                "Join my event! Open this link: " + invitePageUrl);
         startActivity(Intent.createChooser(shareIntent, "Share invite via"));
     }
 }

@@ -7,6 +7,7 @@ import com.example.myapplication.network.dto.GuestAuthResponse;
 import com.example.myapplication.network.dto.LoginRequest;
 import com.example.myapplication.network.dto.NamedItemResponse;
 import com.example.myapplication.network.dto.RegisterRequest;
+import com.example.myapplication.network.dto.SaveEventVendorRequest;
 import com.example.myapplication.network.dto.UpdateEventRequest;
 import com.example.myapplication.network.dto.VendorResponse;
 import com.example.myapplication.network.dto.VenueResponse;
@@ -53,6 +54,9 @@ public interface ApiService {
     @GET("api/events/organiser/{organiserId}")
     Call<List<EventResponse>> getMyEvents(@Path("organiserId") Long organiserId);
 
+    @GET("api/events/my")
+    Call<List<EventResponse>> getCreatedEvents();
+
     @DELETE("api/events/{id}")
     Call<Void> deleteEvent(@Path("id") Long id);
 
@@ -64,6 +68,9 @@ public interface ApiService {
 
     @DELETE("api/events/{id}/leave")
     Call<Void> leaveEvent(@Path("id") Long id);
+
+    @POST("api/events/{id}/vendors")
+    Call<VendorResponse> addVendorToEvent(@Path("id") Long id, @Body SaveEventVendorRequest request);
 
     // ── Invite link ────────────────────────────────────────────────────────────
 

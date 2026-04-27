@@ -257,7 +257,10 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
                     // Navigate to vendor selection if event has options
                     if (selectedOptions != null && !selectedOptions.isEmpty()) {
                         Intent intent = new Intent(WeatherSurveyResultsActivity.this, VendorSuggestionsActivity.class);
-                        intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, locationCity);
+                        String vendorCity = (locationCity != null && !locationCity.isEmpty()) ? locationCity : locationName;
+                        intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, vendorCity);
+                        intent.putExtra(VendorSuggestionsActivity.EXTRA_EVENT_ID, createdEvent.id);
+                        intent.putExtra(VendorSuggestionsActivity.EXTRA_ALLOW_ADD, true);
                         intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS, selectedOptions);
                         startActivity(intent);
                     } else {
