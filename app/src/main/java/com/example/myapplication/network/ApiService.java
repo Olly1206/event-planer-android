@@ -8,6 +8,7 @@ import com.example.myapplication.network.dto.LoginRequest;
 import com.example.myapplication.network.dto.NamedItemResponse;
 import com.example.myapplication.network.dto.RegisterRequest;
 import com.example.myapplication.network.dto.SaveEventVendorRequest;
+import com.example.myapplication.network.dto.ShortCodeResponse;
 import com.example.myapplication.network.dto.UpdateEventRequest;
 import com.example.myapplication.network.dto.VendorResponse;
 import com.example.myapplication.network.dto.VenueResponse;
@@ -91,7 +92,7 @@ public interface ApiService {
 
     /** Get a short code for the invite token (organiser/admin only) — WAF-safe sharing */
     @GET("api/events/{id}/invite-link/short")
-    Call<String> getShortInviteCode(@Path("id") Long id);
+    Call<ShortCodeResponse> getShortInviteCode(@Path("id") Long id);
 
     /** Grant admin rights to a user by username */
     @POST("api/events/{id}/admins/{username}")

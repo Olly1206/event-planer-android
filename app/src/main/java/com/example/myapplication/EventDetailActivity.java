@@ -14,6 +14,7 @@ import com.example.myapplication.auth.AuthManager;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.EventResponse;
+import com.example.myapplication.network.dto.ShortCodeResponse;
 import com.example.myapplication.network.dto.VendorResponse;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -323,11 +324,11 @@ public class EventDetailActivity extends BaseActivity {
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
         
         // Fetch the short code for safer sharing (avoids WAF blocks on long UUIDs)
-        api.getShortInviteCode(eventId).enqueue(new Callback<String>() {
+        api.getShortInviteCode(eventId).enqueue(new Callback<ShortCodeResponse>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
+            public void onResponse(Call<ShortCodeResponse> call, Response<ShortCodeResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String shortCode = response.body().replaceAll("\"", "");  // Strip quotes from JSON string
+                    String shortCode = response.body().getShortCode();
                     String shortInviteUrl = RetrofitClient.getBaseUrl() + "s/" + shortCode;
                     
                     Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -343,7 +344,7 @@ public class EventDetailActivity extends BaseActivity {
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable t) {
+            public void onFailure(Call<ShortCodeResponse> call, Throwable t) {
                 Toast.makeText(EventDetailActivity.this,
                         "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
