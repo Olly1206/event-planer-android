@@ -13,6 +13,7 @@ import com.example.myapplication.network.dto.EventResponse;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
+import java.util.Set;
 
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> {
 
@@ -27,6 +28,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
     private final List<EventResponse> events;
     private final OnEventClickListener listener;
     private OnJoinEventListener joinListener;
+    private Set<Long> joinedEventIds;
 
     public EventAdapter(List<EventResponse> events, OnEventClickListener listener) {
         this.events = events;
@@ -42,6 +44,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
 
     public void setJoinListener(OnJoinEventListener joinListener) {
         this.joinListener = joinListener;
+    }
+
+    public void setJoinedEventIds(Set<Long> joinedEventIds) {
+        this.joinedEventIds = joinedEventIds;
     }
 
     @NonNull
@@ -81,8 +87,14 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
         holder.itemView.setOnClickListener(v -> listener.onEventClick(event));
 
         if (joinListener != null) {
+            boolean alreadyJoined = event.id != null
+                    && joinedEventIds != null
+                    && joinedEventIds.contains(event.id);
+
             holder.btnJoinEvent.setVisibility(View.VISIBLE);
-            holder.btnJoinEvent.setOnClickListener(v -> joinListener.onJoinClick(event));
+            holder.btnJoinEvent.setEnabled(!alreadyJoined);
+            holder.btnJoinEvent.setText(alreadyJoined ? "Joined" : "Join Event");
+            holder.btnJoinEvent.setOnClickListener(alreadyJoined ? null : v -> joinListener.onJoinClick(event));
         } else {
             holder.btnJoinEvent.setVisibility(View.GONE);
         }

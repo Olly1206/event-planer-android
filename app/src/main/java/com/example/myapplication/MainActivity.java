@@ -26,6 +26,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,6 +36,7 @@ import retrofit2.Response;
 public class MainActivity extends BaseActivity {
 
     private final List<EventResponse> eventList = new ArrayList<>();
+    private final Set<Long> joinedEventIds = new HashSet<>();
     private EventAdapter adapter;
     private RecyclerView recyclerView;
     private TextView tvNoEvents;
@@ -66,6 +69,7 @@ public class MainActivity extends BaseActivity {
             intent.putExtra("eventId", event.id);
             startActivity(intent);
         });
+        adapter.setJoinedEventIds(joinedEventIds);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
@@ -147,6 +151,12 @@ public class MainActivity extends BaseActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     eventList.clear();
                     eventList.addAll(response.body());
+                    joinedEventIds.clear();
+                    for (EventResponse event : eventList) {
+                        if (event.id != null) {
+                            joinedEventIds.add(event.id);
+                        }
+                    }
                     adapter.notifyDataSetChanged();
                     updateUI();
                 } else {
@@ -254,10 +264,16 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
+                    if (event.id != null) {
+                        joinedEventIds.add(event.id);
+                    }
                     Toast.makeText(MainActivity.this,
                             "Joined event!", Toast.LENGTH_SHORT).show();
                     loadAllPublicEvents();
                 } else if (response.code() == 409 || response.code() == 400) {
+                    if (event.id != null) {
+                        joinedEventIds.add(event.id);
+                    }
                     Toast.makeText(MainActivity.this,
                             "You're already a member of this event", Toast.LENGTH_SHORT).show();
                     loadAllPublicEvents();
