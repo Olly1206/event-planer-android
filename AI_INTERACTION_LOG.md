@@ -2493,3 +2493,56 @@ Included changes in the pushed commit:
 ```
 
 ---
+
+---
+
+**User Prompt 84** [2026-04-29 18:46:09 UTC]:
+```text
+# Context:
+Invite links (https://event-planer-backend.onrender.com/invite/{token}) were returning 403 "not authorized" error for recipients.
+
+## Investigation:
+- GET /invite/{token} returned 403 (blocked by WAF/CDN)
+- GET /api/events/invite/{token} returned 200 OK (valid invite, JSON preview works)
+- The CDN/WAF was blocking HTML-based invite paths but allowing JSON API paths
+- Attempted quick fix with `/e/{token}` short endpoint — also blocked by CDN
+```
+
+**AI Response 84**:
+```text
+Root cause identified: Cloudflare/Render WAF was blocking UUID-based paths for HTML responses.
+
+Solution implemented: Server-side short code mapping for WAF-safe sharing.
+
+Backend changes (event-planer-backend):
+- Created TokenShortCode entity: src/main/java/event_planer/project/entity/TokenShortCode.java
+- Created TokenShortCodeRepository: src/main/java/event_planer/project/repository/TokenShortCodeRepository.java
+- Created ShortCodeService: src/main/java/event_planer/project/service/ShortCodeService.java
+  - Generates 8-character alphanumeric codes (a-z0-9)
+  - Maps tokens to codes (auto-deduplicates collisions)
+  - Resolves codes back to tokens with access tracking
+- Updated EventService: Added wrapper methods getShortCodeForToken() and resolveShortCode()
+- Updated EventController: Added GET /api/events/{id}/invite-link/short endpoint (organiser/admin only)
+- Updated InvitePageController: Added /s/{shortCode} public endpoint that redirects to /invite/{token}
+- Updated SecurityConfig: Permitted GET/HEAD on /s/** (short code paths)
+
+Android changes (event-planer-android):
+- Updated EventDetailActivity.java: Modified shareInviteLink() to fetch short code via API instead of sharing token
+- Updated ApiService.java: Added getShortInviteCode(@Path("id") Long id) endpoint
+- Share flow now: Organiser clicks Share → app calls /api/events/{id}/invite-link/short → gets short code → shares https://.../s/{code}
+
+Testing status:
+- Backend compiles: ./gradlew compileJava (BUILD SUCCESSFUL)
+- Android compiles: ./gradlew :app:compileDebugJavaWithJavac (BUILD SUCCESSFUL)
+- Backend pushed: commit 50d4557 ("Add short code mapping for WAF-safe invite sharing")
+- Android pushed: commit 8381ce2 ("Update Android to share WAF-safe short codes for invites")
+- Deployment pending on Render (typically 1-3 minutes)
+
+Next steps:
+1. Wait for Render to deploy new commits
+2. Test: Create an event → Share invite → Recipient opens short code URL (/s/{code})
+3. Verify: Short code link should bypass CDN blocks and show invite page
+4. If still blocked: Check Render/Cloudflare WAF rules for /s/** patterns
+```
+
+---
