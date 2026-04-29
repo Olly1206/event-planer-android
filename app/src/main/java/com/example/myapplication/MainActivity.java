@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,9 @@ public class MainActivity extends BaseActivity {
     private EventAdapter adapter;
     private RecyclerView recyclerView;
     private TextView tvNoEvents;
+    private TextView tvLoadingEvents;
+    private View loadingStateContainer;
+    private ProgressBar progressEvents;
     private ChipGroup chipGroupFilter;
     private TextInputLayout searchInputLayout;
     private TextInputEditText etSearch;
@@ -59,6 +63,9 @@ public class MainActivity extends BaseActivity {
 
         recyclerView     = findViewById(R.id.recyclerViewEvents);
         tvNoEvents       = findViewById(R.id.textViewNoEvents);
+        tvLoadingEvents   = findViewById(R.id.textViewLoadingEvents);
+        loadingStateContainer = findViewById(R.id.loadingStateContainer);
+        progressEvents    = findViewById(R.id.progressEvents);
         chipGroupFilter  = findViewById(R.id.chipGroupFilter);
         searchInputLayout = findViewById(R.id.searchInputLayout);
         etSearch          = findViewById(R.id.etSearch);
@@ -144,8 +151,40 @@ public class MainActivity extends BaseActivity {
     }
 
     private void loadCreatedEvents() {
+        showLoadingState("Loading your created events…");
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
         api.getCreatedEvents().enqueue(new Callback<List<EventResponse>>() {
+            @Override
+            public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    eventList.clear();
+                    eventList.addAll(response.body());
+                    adapter.notifyDataSetChanged();
+                    hideLoadingState();
+                    updateUI();
+                } else {
+                    hideLoadingState();
+                    if (response.code() == 401 || response.code() == 403) {
+                        redirectToLogin();
+                        return;
+                    }
+                    Toast.makeText(MainActivity.this,
+                            "Failed to load events (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                hideLoadingState();
+                showNetworkFailure(t);
+            }
+        });
+    }
+
+    private void loadJoinedEvents() {
+        showLoadingState("Loading events you joined…");
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.getJoinedEvents().enqueue(new Callback<List<EventResponse>>() {
             @Override
             public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -158,35 +197,10 @@ public class MainActivity extends BaseActivity {
                         }
                     }
                     adapter.notifyDataSetChanged();
+                    hideLoadingState();
                     updateUI();
                 } else {
-                    if (response.code() == 401 || response.code() == 403) {
-                        redirectToLogin();
-                        return;
-                    }
-                    Toast.makeText(MainActivity.this,
-                            "Failed to load events (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<EventResponse>> call, Throwable t) {
-                showNetworkFailure(t);
-            }
-        });
-    }
-
-    private void loadJoinedEvents() {
-        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
-        api.getJoinedEvents().enqueue(new Callback<List<EventResponse>>() {
-            @Override
-            public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    eventList.clear();
-                    eventList.addAll(response.body());
-                    adapter.notifyDataSetChanged();
-                    updateUI();
-                } else {
+                    hideLoadingState();
                     if (response.code() == 401 || response.code() == 403) {
                         redirectToLogin();
                         return;
@@ -198,12 +212,14 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                hideLoadingState();
                 showNetworkFailure(t);
             }
         });
     }
 
     private void loadAllPublicEvents() {
+        showLoadingState("Loading discover events…");
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
         api.getAllEvents().enqueue(new Callback<List<EventResponse>>() {
             @Override
@@ -212,8 +228,10 @@ public class MainActivity extends BaseActivity {
                     eventList.clear();
                     eventList.addAll(response.body());
                     adapter.notifyDataSetChanged();
+                    hideLoadingState();
                     updateUI();
                 } else {
+                    hideLoadingState();
                     if (response.code() == 401 || response.code() == 403) {
                         redirectToLogin();
                         return;
@@ -225,12 +243,14 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                hideLoadingState();
                 showNetworkFailure(t);
             }
         });
     }
 
     private void searchEvents(String keyword) {
+        showLoadingState("Searching public events…");
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
         api.searchEvents(keyword).enqueue(new Callback<List<EventResponse>>() {
             @Override
@@ -239,8 +259,10 @@ public class MainActivity extends BaseActivity {
                     eventList.clear();
                     eventList.addAll(response.body());
                     adapter.notifyDataSetChanged();
+                    hideLoadingState();
                     updateUI();
                 } else {
+                    hideLoadingState();
                     Toast.makeText(MainActivity.this,
                             "Search failed (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
                 }
@@ -248,6 +270,7 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                hideLoadingState();
                 showNetworkFailure(t);
             }
         });
@@ -308,6 +331,29 @@ public class MainActivity extends BaseActivity {
                 ? t.getMessage()
                 : "Cannot reach server right now";
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void showLoadingState(String message) {
+        if (tvLoadingEvents != null) {
+            tvLoadingEvents.setText(message);
+        }
+        if (loadingStateContainer != null) {
+            loadingStateContainer.setVisibility(View.VISIBLE);
+        }
+        if (progressEvents != null) {
+            progressEvents.setVisibility(View.VISIBLE);
+        }
+        tvNoEvents.setVisibility(View.GONE);
+        recyclerView.setVisibility(View.GONE);
+    }
+
+    private void hideLoadingState() {
+        if (loadingStateContainer != null) {
+            loadingStateContainer.setVisibility(View.GONE);
+        }
+        if (progressEvents != null) {
+            progressEvents.setVisibility(View.GONE);
+        }
     }
 
     private void updateUI() {
