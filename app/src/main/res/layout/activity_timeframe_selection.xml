@@ -54,7 +54,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:strokeColor="@color/brand_purple_end"
+                app:strokeWidth="1dp"
                 android:layout_marginBottom="16dp">
 
                 <LinearLayout

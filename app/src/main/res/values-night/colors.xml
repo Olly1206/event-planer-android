@@ -5,32 +5,32 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Brand palette (same in dark mode) -->
-    <color name="brand_purple_start">#FF667EEA</color>
-    <color name="brand_purple_end">#FF764BA2</color>
-    <color name="brand_purple_primary">#FF6C63FF</color>
-    <color name="brand_purple_dark">#FF5A52D5</color>
-    <color name="brand_purple_light">#FFE8E6FF</color>
+    <color name="brand_purple_start">#FF0F3D2E</color>
+    <color name="brand_purple_end">#FF2F7D32</color>
+    <color name="brand_purple_primary">#FF6CE37D</color>
+    <color name="brand_purple_dark">#FF1C6B35</color>
+    <color name="brand_purple_light">#FF1E2D23</color>
 
     <!-- Surface / background for dark mode -->
-    <color name="bg_gradient_start">#FF667EEA</color>
-    <color name="bg_gradient_end">#FF764BA2</color>
-    <color name="surface_card">#FF1F1F2E</color>
-    <color name="surface_background">#FF0F0F1E</color>
+    <color name="bg_gradient_start">#FF0B1F18</color>
+    <color name="bg_gradient_end">#FF1F5C2E</color>
+    <color name="surface_card">#FF121A15</color>
+    <color name="surface_background">#FF050806</color>
 
-    <!-- Text for dark mode (inverted - light colors) -->
-    <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#FFCCCCCC</color>
-    <color name="text_hint">#FF888888</color>
-    <color name="text_on_primary">#FFFFFFFF</color>
+    <!-- Text for dark mode -->
+    <color name="text_primary">#FFF2FFF2</color>
+    <color name="text_secondary">#FFA8B7AA</color>
+    <color name="text_hint">#FF748576</color>
+    <color name="text_on_primary">#FF08110B</color>
 
     <!-- Chips / badges -->
-    <color name="chip_bg">#FF3A3A50</color>
-    <color name="chip_text">#FFBBBBDD</color>
+    <color name="chip_bg">#FF0E1711</color>
+    <color name="chip_text">#FFB6F2BB</color>
 
     <!-- Status badge colours (adjusted for dark background) -->
-    <color name="status_planned">#FF8FA3F7</color>
-    <color name="status_ongoing">#FF66BB6A</color>
-    <color name="status_completed">#FFBDBDBD</color>
-    <color name="status_cancelled">#FFEF5350</color>
-    <color name="status_draft">#FFFFD54F</color>
+    <color name="status_planned">#FF2F8F3A</color>
+    <color name="status_ongoing">#FF6CE37D</color>
+    <color name="status_completed">#FF627066</color>
+    <color name="status_cancelled">#FFE06B63</color>
+    <color name="status_draft">#FF2C5F37</color>
 </resources>

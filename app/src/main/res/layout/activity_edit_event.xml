@@ -42,7 +42,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:strokeColor="@color/brand_purple_end"
+                app:strokeWidth="1dp"
                 android:layout_marginBottom="12dp">
 
                 <LinearLayout
@@ -56,6 +59,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Title"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint"
                         android:layout_marginBottom="12dp">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -71,6 +77,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Description"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint"
                         android:layout_marginBottom="12dp">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -87,6 +96,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Location Name"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint"
                         android:layout_marginBottom="12dp">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -102,6 +114,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Max Participants"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint"
                         android:layout_marginBottom="12dp">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -154,7 +169,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Manage Vendors"
                 android:textColor="@color/brand_purple_primary"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 app:strokeWidth="1dp"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 

@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:padding="24dp"
         android:textAlignment="center"
-        android:textColor="@android:color/holo_red_dark"
+        android:textColor="@color/status_cancelled"
         android:visibility="gone" />
 
     <!-- Per-day weather cards -->

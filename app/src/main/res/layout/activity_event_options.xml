@@ -46,7 +46,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:strokeColor="@color/brand_purple_end"
+                app:strokeWidth="1dp"
                 android:layout_marginBottom="12dp">
 
                 <LinearLayout
@@ -61,7 +64,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:hint="Event Title *">
+                        android:hint="Event Title *"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etEventTitle"
@@ -77,7 +83,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="4dp"
-                        android:hint="City / Venue (type to search)">
+                        android:hint="City / Venue (type to search)"
+                        app:boxBackgroundColor="@color/surface_background"
+                        app:boxStrokeColor="@color/brand_purple_end"
+                        app:hintTextColor="@color/text_hint">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etLocationName"
@@ -116,7 +125,7 @@
                         android:layout_height="wrap_content"
                         android:enabled="false"
                         android:text="Browse Venue Suggestions"
-                        app:strokeColor="@color/brand_purple_primary"
+                        app:strokeColor="@color/brand_purple_end"
                         android:textColor="@color/brand_purple_primary" />
 
                 </LinearLayout>
@@ -127,7 +136,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:strokeColor="@color/brand_purple_end"
+                app:strokeWidth="1dp"
                 android:layout_marginBottom="16dp">
 
                 <LinearLayout

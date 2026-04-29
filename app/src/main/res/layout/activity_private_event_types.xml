@@ -50,7 +50,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Birthday Party"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -60,7 +60,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Wedding"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -70,7 +70,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Family Reunion"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -80,7 +80,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="House Party"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -90,7 +90,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Graduation"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -100,7 +100,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Anniversary"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
             <Button
@@ -110,7 +110,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="Other"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:strokeColor="@color/brand_purple_primary"
+                app:strokeColor="@color/brand_purple_end"
                 android:textColor="@color/brand_purple_primary" />
 
         </LinearLayout>

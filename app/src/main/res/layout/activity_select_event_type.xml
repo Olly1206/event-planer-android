@@ -44,11 +44,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="16dp"
-            app:cardElevation="6dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:strokeColor="@color/brand_purple_end"
+            app:strokeWidth="1dp"
             android:layout_marginBottom="20dp"
             android:clickable="true"
             android:focusable="true"
-            app:rippleColor="#33667EEA">
+            app:rippleColor="#336CE37D">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -88,10 +91,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="16dp"
-            app:cardElevation="6dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:strokeColor="@color/brand_purple_end"
+            app:strokeWidth="1dp"
             android:clickable="true"
             android:focusable="true"
-            app:rippleColor="#33667EEA">
+            app:rippleColor="#336CE37D">
 
             <LinearLayout
                 android:layout_width="match_parent"

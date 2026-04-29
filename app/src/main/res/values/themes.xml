@@ -8,6 +8,8 @@
         <item name="colorOnSecondary">@color/text_on_primary</item>
         <item name="android:colorBackground">@color/surface_background</item>
         <item name="colorSurface">@color/surface_card</item>
+        <item name="colorSurfaceVariant">@color/brand_purple_light</item>
+        <item name="colorOutline">@color/brand_purple_end</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
