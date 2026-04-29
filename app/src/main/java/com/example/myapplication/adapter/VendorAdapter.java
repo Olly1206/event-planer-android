@@ -1,5 +1,7 @@
 package com.example.myapplication.adapter;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +23,7 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
 
     public interface Listener {
         void onVendorClicked(VendorResponse vendor);
-        void onVendorActionClicked(VendorResponse vendor);
+        void onVendorActionClicked(VendorResponse vendor, boolean alreadyAdded);
     }
 
     private final List<VendorResponse> vendors;
@@ -75,8 +77,14 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
         if (vendor.website != null && !vendor.website.isEmpty()) {
             holder.tvWebsite.setText("\uD83C\uDF10 " + vendor.website);
             holder.tvWebsite.setVisibility(View.VISIBLE);
+            holder.tvWebsite.setOnClickListener(v -> {
+                String websiteUrl = normaliseWebsiteUrl(vendor.website);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl));
+                v.getContext().startActivity(browserIntent);
+            });
         } else {
             holder.tvWebsite.setVisibility(View.GONE);
+            holder.tvWebsite.setOnClickListener(null);
         }
 
         if (vendor.openingHours != null && !vendor.openingHours.isEmpty()) {
@@ -95,11 +103,11 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
         if (showActionButton) {
             boolean alreadyAdded = vendor.osmId != null && addedVendorIds.contains(vendor.osmId);
             holder.btnAction.setVisibility(View.VISIBLE);
-            holder.btnAction.setEnabled(!alreadyAdded);
-            holder.btnAction.setText(alreadyAdded ? "Added" : "Add to Event");
+            holder.btnAction.setEnabled(true);
+            holder.btnAction.setText(alreadyAdded ? "Remove from Event" : "Add to Event");
             holder.btnAction.setOnClickListener(v -> {
-                if (!alreadyAdded && listener != null) {
-                    listener.onVendorActionClicked(vendor);
+                if (listener != null) {
+                    listener.onVendorActionClicked(vendor, alreadyAdded);
                 }
             });
         } else {
@@ -126,6 +134,21 @@ public class VendorAdapter extends RecyclerView.Adapter<VendorAdapter.ViewHolder
             addedVendorIds.add(vendorId);
             notifyDataSetChanged();
         }
+    }
+
+    public void markVendorRemoved(Long vendorId) {
+        if (vendorId != null) {
+            addedVendorIds.remove(vendorId);
+            notifyDataSetChanged();
+        }
+    }
+
+    private String normaliseWebsiteUrl(String rawUrl) {
+        String trimmed = rawUrl.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+        return "https://" + trimmed;
     }
 
     private String formatCategory(String raw) {

@@ -35,9 +35,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class EventOptionsActivity extends BaseActivity {
 
     private static final String[] RADIUS_LABELS = {
-            "No preference", "5 km", "10 km", "25 km", "50 km", "100 km"
+            "No preference", "5 km", "10 km"
     };
-    private static final int[] RADIUS_VALUES = { 0, 5, 10, 25, 50, 100 };
+    private static final int[] RADIUS_VALUES = { 0, 5, 10 };
 
     /** Delay (ms) after the user stops typing before firing a Nominatim request. */
     private static final long SEARCH_DEBOUNCE_MS = 400;
@@ -100,7 +100,7 @@ public class EventOptionsActivity extends BaseActivity {
                 this, android.R.layout.simple_spinner_item, RADIUS_LABELS);
         radiusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRadius.setAdapter(radiusAdapter);
-        spinnerRadius.setSelection(3); // default: 25 km
+        spinnerRadius.setSelection(2); // default: 10 km
 
         // Dropdown that shows city suggestions below the text field
         listPopupWindow = new ListPopupWindow(this);

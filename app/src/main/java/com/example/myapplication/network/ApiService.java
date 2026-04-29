@@ -72,6 +72,9 @@ public interface ApiService {
     @POST("api/events/{id}/vendors")
     Call<VendorResponse> addVendorToEvent(@Path("id") Long id, @Body SaveEventVendorRequest request);
 
+    @DELETE("api/events/{id}/vendors/{osmId}")
+    Call<Void> removeVendorFromEvent(@Path("id") Long id, @Path("osmId") Long osmId);
+
     // ── Invite link ────────────────────────────────────────────────────────────
 
     /** Public preview — no auth required */
@@ -85,6 +88,10 @@ public interface ApiService {
     /** Get the raw invite token (organiser/admin only) */
     @GET("api/events/{id}/invite-link")
     Call<String> getInviteLink(@Path("id") Long id);
+
+    /** Get a short code for the invite token (organiser/admin only) — WAF-safe sharing */
+    @GET("api/events/{id}/invite-link/short")
+    Call<String> getShortInviteCode(@Path("id") Long id);
 
     /** Grant admin rights to a user by username */
     @POST("api/events/{id}/admins/{username}")

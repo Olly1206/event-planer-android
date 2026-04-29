@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -14,6 +15,7 @@ import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.SaveEventVendorRequest;
 import com.example.myapplication.network.dto.VendorResponse;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,6 +55,7 @@ public class VendorSuggestionsActivity extends BaseActivity {
         progress    = findViewById(R.id.progressVendors);
         tvNoVendors = findViewById(R.id.tvNoVendors);
         recycler    = findViewById(R.id.recyclerVendors);
+        MaterialButton btnBackToMainMenu = findViewById(R.id.btnBackToMainMenu);
 
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, -1L);
         allowAdd = getIntent().getBooleanExtra(EXTRA_ALLOW_ADD, false);
@@ -71,12 +74,22 @@ public class VendorSuggestionsActivity extends BaseActivity {
             }
 
             @Override
-            public void onVendorActionClicked(VendorResponse vendor) {
-                addVendorToEvent(vendor);
+            public void onVendorActionClicked(VendorResponse vendor, boolean alreadyAdded) {
+                if (alreadyAdded) {
+                    removeVendorFromEvent(vendor);
+                } else {
+                    addVendorToEvent(vendor);
+                }
             }
         });
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
+        btnBackToMainMenu.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
 
         String city = getIntent().getStringExtra(EXTRA_CITY);
         ArrayList<String> options = getIntent().getStringArrayListExtra(EXTRA_OPTIONS);
@@ -133,6 +146,39 @@ public class VendorSuggestionsActivity extends BaseActivity {
             public void onFailure(Call<VendorResponse> call, Throwable t) {
                 Toast.makeText(VendorSuggestionsActivity.this,
                         "Cannot save vendor: " + t.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void removeVendorFromEvent(VendorResponse vendor) {
+        if (!allowAdd || eventId == -1L || vendor.osmId == null) {
+            return;
+        }
+
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.removeVendorFromEvent(eventId, vendor.osmId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    adapter.markVendorRemoved(vendor.osmId);
+                    Toast.makeText(VendorSuggestionsActivity.this,
+                            "Vendor removed from event", Toast.LENGTH_SHORT).show();
+                } else if (response.code() == 404) {
+                    adapter.markVendorRemoved(vendor.osmId);
+                    Toast.makeText(VendorSuggestionsActivity.this,
+                            "Vendor is not attached to this event", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(VendorSuggestionsActivity.this,
+                            "Could not remove vendor (code " + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(VendorSuggestionsActivity.this,
+                        "Cannot remove vendor: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
         });

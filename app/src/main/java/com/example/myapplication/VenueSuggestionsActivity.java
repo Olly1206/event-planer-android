@@ -36,6 +36,7 @@ public class VenueSuggestionsActivity extends BaseActivity {
     public static final String EXTRA_LOCATION_TYPE = "venue_location_type";
     public static final String EXTRA_EVENT_TYPE    = "venue_event_type";
     public static final String RESULT_VENUE_NAME   = "selected_venue_name";
+    private static final int MAX_RADIUS_METERS = 10_000;
 
     private final List<VenueResponse> venueList = new ArrayList<>();
     private VenueAdapter adapter;
@@ -64,6 +65,7 @@ public class VenueSuggestionsActivity extends BaseActivity {
 
         String city         = getIntent().getStringExtra(EXTRA_CITY);
         int    radius       = getIntent().getIntExtra(EXTRA_RADIUS, 5000);
+        int    safeRadius   = Math.min(radius, MAX_RADIUS_METERS);
         String locationType = getIntent().getStringExtra(EXTRA_LOCATION_TYPE);
         String eventType    = getIntent().getStringExtra(EXTRA_EVENT_TYPE);
 
@@ -73,7 +75,7 @@ public class VenueSuggestionsActivity extends BaseActivity {
             return;
         }
 
-        loadVenues(city, radius, locationType, eventType);
+        loadVenues(city, safeRadius, locationType, eventType);
     }
 
     private void loadVenues(String city, int radius,

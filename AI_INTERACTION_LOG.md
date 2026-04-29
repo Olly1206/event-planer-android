@@ -1925,3 +1925,571 @@ It has **59 user prompts** from the April 20-21 conversation. Let me extract all
 
 ---
 
+**User Prompt 61** [2026-04-21 10:30:59]:
+alright ill start bugtesting now, make a list of everything and come back to you!
+
+**AI Response 61**:
+Provided a full deployment and testing checklist covering auth, event CRUD, venue and vendor search, invite links, weather, UI stability, and known production caveats.
+
+---
+
+**User Prompt 62** [2026-04-21 10:49:11]:
+oookay here we are again
+
+so i found multiple issues alread:
+1. the guest login option isnt there
+2. I want a go back arrow added to every screenview
+3. the vendor selection just completely vaporized
+4. the shared link to join events isnt actually a link thats useable
+5. there are still no venues showing even when i enter munich which should have a lot of possible places for a seminar
+
+take your time tackeling these issues in depth, dont care about time usage or token consumtion, and explain the code changes to me in detail before pushing them to git
+
+**AI Response 62**:
+Started a deep-dive investigation across Android and backend code to map each issue, traced auth, deep links, vendor flow, and venue query paths, then provided a detailed implementation plan before coding.
+
+---
+
+**User Prompt 63** [2026-04-21 11:16:37]:
+yep, implement in this order and push afterwards
+
+**AI Response 63**:
+Implemented and pushed a first batch of fixes for guest login UI/API wiring, navigation handling, vendor flow, invite handling, and venue diagnostics, then returned a test checklist.
+
+---
+
+**User Prompt 64** [2026-04-21 11:37:54]:
+Continue: "Continue to iterate?"
+
+**AI Response 64**:
+Continued iterative fixes, completed additional edits, committed and pushed Android and backend updates, and reported completion status.
+
+---
+
+**User Prompt 65** [2026-04-21 11:41:23]:
+so now that i pushed a new backend to git i gotta redeploy the server right
+
+**AI Response 65**:
+Explained that Render normally auto-deploys on push, how to verify deployment status in Render, and how to trigger a manual deploy if needed.
+
+---
+
+**User Prompt 66** [2026-04-21 11:46:08]:
+yea but there seems to be a compilation error now actually, can you look at that
+
+**AI Response 66**:
+Identified a backend compile issue in VenueService logging (undefined displayName field), fixed it, committed, and pushed the correction for redeploy.
+
+---
+
+**User Prompt 67** [2026-04-21 12:01:34]:
+okay we fixed essentially nothing. The guest login button is there, but onPress it shows "guest login failed". There are still no venues showing up for munich, and the option to select vendors from still doesnt exist
+
+**AI Response 67**:
+Diagnosed guest login response-model mismatch (GuestAuthResponse vs AuthResponse), fixed Android DTO and API typing, committed/pushed, and requested logs for venue diagnosis while clarifying vendor-flow expectations.
+
+---
+
+**User Prompt 68** [2026-04-21 12:19:52]:
+where would you say the vendor selection is currently? because it was definitly in the codebase last week
+
+for the venue log, here are three logs where the server tried to respond to the unput munich: 2026-04-21T11:59:29.727Z  INFO 1 --- [project] [nio-8080-exec-2] e.project.service.VenueService           : Fetching venues for city=Munich, radiusMeters=25000, locationType=OUTDOOR, eventType=Wedding
+2026-04-21T11:59:32.571Z  INFO 1 --- [project] [nio-8080-exec-2] e.project.service.VenueService           : Geocoded city Munich to coordinates: lat=48.1371079, lon=11.5753822
+2026-04-21T11:59:48.146Z  INFO 1 --- [project] [nio-8080-exec-2] e.project.service.VenueService           : Found 0 venues for city Munich
+
+**AI Response 68**:
+Traced vendor flow to WeatherSurveyResultsActivity and identified that post-create navigation was skipping vendor selection; also adjusted outdoor venue filter strategy and Overpass diagnostics, then committed and pushed those updates.
+
+---
+
+### [2026-04-21 15:18 UTC] Archived Session Import - Codex Conversation
+
+Imported from:
+`/home/olly/.codex/archived_sessions/rollout-2026-04-21T17-18-11-019db09e-d081-7400-ac51-7b8eeb7ea918.jsonl`
+
+**User Prompt 69** [2026-04-21 15:19:13 UTC]:
+```text
+# Context from my IDE setup:
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+alright, icant debugg right now so weve got some downtime. i want you to use that time to run through the entire codebase along with the property files and contribution.md to check for a) any possible buggs that the code might present at runtime
+b) check the API used to find vendors and venues if the way its presented right now is sure to produce useable results for the user. Check if theyre also following OpenAI guidlines and whatever else needs to be followed
+
+do not push anything to git yet
+```
+
+**AI Response 69**:
+```text
+**Findings**
+- High: Guest mode is very likely broken at runtime. [User.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/entity/User.java:43) makes `email` and `passwordHash` non-nullable, but [UserService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/UserService.java:119) saves guest users with both set to `null`. That should fail on a real insert even though the mocked unit test passes.
+- High: Registration trusts a caller-supplied role, including `ADMIN`. [RegisterRequest.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/dto/auth/RegisterRequest.java:28) accepts any `User.Role`, and [UserService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/UserService.java:55) persists it directly. An unauthenticated client can self-assign elevated roles.
+- High: Event capacity can be exceeded under concurrent joins. Both join paths do “count participants, then insert” with no lock/version check in [EventService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/EventService.java:231) and [EventService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/EventService.java:323). Two requests can both see one slot left and both succeed.
+- High: `application.properties` contains live fallback secrets, which also contradicts [CONTRIBUTING.md](/home/olly/AndroidStudioProjects/SpringBoot_Backend/CONTRIBUTING.md:137). The default DB password and JWT signing key are committed in [application.properties](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/resources/application.properties:6). If env vars are missing, every deployment shares the same credentials.
+- Medium: Guest-event migration is risky and likely incorrect for participant rows. `EventParticipant` uses a composite PK with `user_id` in [EventParticipant.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/entity/EventParticipant.java:30), but [UserService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/UserService.java:171) only swaps `participation.setUser(newUser)` and saves. Changing a mapped primary key in place is fragile and can fail or leave inconsistent rows.
+- Medium: Weather requests bypass the configured timeout-safe `RestTemplate`. [RestClientConfig.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/config/RestClientConfig.java:24) defines timeouts, but [WeatherService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/WeatherService.java:30) creates a fresh `new RestTemplate()`. Slow Open-Meteo calls can hang longer than the rest of the app.
+- Medium: `GET /api/weather` accepts a blank date and turns it into a silent “no data” 200 response. [WeatherController.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/controller/WeatherController.java:35) defaults `date` to `""`, and [WeatherService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/WeatherService.java:102) sends that straight to `start_date`/`end_date`.
+
+**Vendor/Venue API**
+- Usability: results are not guaranteed to be very usable yet. Both services geocode only a raw city string with `limit=1` in [VenueService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VenueService.java:88) and [VendorService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VendorService.java:111), then return the first 20 Overpass elements in provider order in [VenueService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VenueService.java:270) and [VendorService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VendorService.java:243). There’s no distance calculation, no ranking, no confidence, and no country disambiguation, so ambiguous cities and arbitrary ordering are very possible.
+- Usability: multi-option vendor search can duplicate businesses. [VendorService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VendorService.java:97) loops options and concatenates results; deduping only happens inside each single query, not across the combined response.
+- Compliance: partially okay, but not enough for scale. Good news: both services send a custom `User-Agent`, which Nominatim requires. Missing pieces are caching/throttling/switchability/attribution. Nominatim’s current policy requires a valid app identifier, attribution, app-side caching, switchability, and staying under 1 req/s aggregate; Overpass explicitly warns against using the public instance as a general app backend at higher load. Right now every request re-geocodes and hits public services directly, so this is fine only for low traffic.
+- Docs: README is out of sync with the actual venue API. It advertises `/api/venues/search` and `/api/venues/nearby` in [README.md](/home/olly/AndroidStudioProjects/SpringBoot_Backend/README.md:65), but the controller only exposes `GET /api/venues` in [VenueController.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/controller/VenueController.java:23).
+
+I found no OpenAI SDK usage, model calls, OpenAI env vars, or OpenAI endpoints anywhere in this backend, so OpenAI guideline compliance is currently not the relevant issue here. The active compliance risk is with Nominatim/Overpass usage rules, not OpenAI.
+
+`./gradlew test` passed, and I didn’t push or change anything.
+
+Sources for the current external-service guidance:
+- Nominatim policy: https://operations.osmfoundation.org/policies/nominatim/
+- Overpass public-instance guidance: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html
+
+If you want, I can turn this straight into a prioritized fix plan next, without pushing anything.
+```
+
+---
+
+**User Prompt 70** [2026-04-21 15:30:34 UTC]:
+```text
+# Context from my IDE setup:
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+That was my mistake, instead of openAI i ment OpenAPI, sorry. Id like you to fix the errors for runtim bugs you foun in the codebase, youre free to change files here as long as theres not git commit. And for the Vendor/venue API, is there a suggestion you have to keep these APIs and make them work the way i intend them to?
+```
+
+**AI Response 70**:
+```text
+I fixed the runtime issues we found and left git alone.
+
+The main code fixes are in [UserService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/UserService.java:47), [WeatherService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/WeatherService.java:31), [WeatherController.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/controller/WeatherController.java:34), [EventRepository.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/repository/EventRepository.java:23), and [EventService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/EventService.java:227). I changed guest creation so it no longer violates DB constraints, blocked self-registration as `ADMIN` or `GUEST`, made guest migration recreate participant rows safely instead of mutating a composite key in place, moved weather onto the configured `RestTemplate`, added weather date validation, and added pessimistic locking on event joins so capacity checks are much safer under concurrent requests. I also added regression coverage in the related service tests, and `./gradlew test` passes.
+
+For the vendor/venue APIs, I do think you can keep Nominatim + Overpass and make them work much closer to what you want. The best next step is not replacing providers, it’s adding a ranking layer in your backend:
+- Add `distanceMeters` and sort results by distance instead of raw Overpass order.
+- Cache geocoding and search results for a few minutes so you stay inside Nominatim/Overpass usage expectations.
+- Add a `countryCode` or `lat/lon` option so “Berlin” and similar city names don’t geocode ambiguously.
+- Dedupe vendor results across multiple selected options and return one vendor with a list of matched option names.
+- Tighten weak venue filters like broad grass/open-area matches so results stay event-usable.
+- Make Overpass/Nominatim base URLs configurable so you can switch mirrors or self-host later if traffic grows.
+
+If you want, I can take the next pass and implement that ranking/caching cleanup for the venue/vendor endpoints without changing the overall provider strategy.
+```
+
+---
+
+**User Prompt 71** [2026-04-21 15:36:54 UTC]:
+```text
+# Context from my IDE setup:
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+yes please implement that, that sounds amazing
+```
+
+**AI Response 71**:
+```text
+I implemented the venue/vendor upgrade and kept your current provider stack.
+
+The search endpoints now support optional `countryCode`, rank results by `distanceMeters`, cache geocoding and search responses in-memory to cut repeated Nominatim/Overpass calls, and return cleaner data. Venues now avoid the weakest outdoor fallback tags, and multi-option vendor searches dedupe the same business and merge its matches into `matchedOptions`. The main changes are in [VenueService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VenueService.java:1), [VendorService.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/service/VendorService.java:1), [VenueController.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/controller/VenueController.java:1), [VendorController.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/controller/VendorController.java:1), [VenueResponse.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/dto/VenueResponse.java:1), and [VendorResponse.java](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/java/event_planer/project/dto/VendorResponse.java:1). I also updated the README endpoint summary in [README.md](/home/olly/AndroidStudioProjects/SpringBoot_Backend/README.md:63).
+
+I added regression tests for distance sorting, caching, country filtering, and vendor deduping, and `./gradlew test` passes. I still haven’t committed anything.
+
+One practical note: this is now much more usable, but if your traffic grows, the next smart step would be either a dedicated Overpass mirror or your own cached proxy layer, plus explicit OSM attribution in the client UI.
+```
+
+---
+
+**User Prompt 72** [2026-04-21 17:25:47 UTC]:
+```text
+# Context from my IDE setup:
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+awesome, thanks! can you push these changes to git please^
+```
+
+**AI Response 72**:
+```text
+The changes are pushed to `origin/master`.
+
+Commit: `7807248`
+Message: `fix runtime bugs and improve venue vendor search`
+
+I left `.codex` untracked and out of the commit.
+```
+
+---
+
+### [2026-04-23 09:12 UTC] Active Session Import - Codex Conversation
+
+Imported from:
+`/home/olly/.codex/sessions/2026/04/23/rollout-2026-04-23T11-12-49-019db99d-076d-7063-9f48-5388dc92f2f0.jsonl`
+
+**User Prompt 73** [2026-04-23 09:12:54 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## Open tabs:
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+can you acces the .codex folder
+```
+
+**AI Response 73**:
+```text
+Yes, I can access `/home/olly/.codex`.
+
+I confirmed the folder is readable from here, and it contains things like `config.toml`, `skills/`, `sessions/`, `logs_2.sqlite`, and `auth.json`. Since that directory includes sensitive files, I’ll treat it carefully.
+
+If you want, I can also inspect a specific part of it, like `skills/`, `config.toml`, or the session/log files.
+```
+
+---
+
+**User Prompt 74** [2026-04-23 09:14:05 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## Open tabs:
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+i wanna grab the second to last session thats archived in there, that should be a fairly long log right?
+```
+
+**AI Response 74**:
+```text
+Yes. There are only `2` files in `~/.codex/archived_sessions`, so the “second to last” archived session is:
+
+`/home/olly/.codex/archived_sessions/rollout-2026-04-21T17-18-11-019db09e-d081-7400-ac51-7b8eeb7ea918.jsonl`
+
+It is the long one:
+- `1.8M` on disk
+- `736` lines
+
+So your guess was right. If you want, I can next either summarize it, extract just the user/assistant messages, or copy it somewhere easier to inspect.
+```
+
+---
+
+**User Prompt 75** [2026-04-23 09:15:57 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## Open tabs:
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+i want you to append everything in that  log, so my prompts and your answers in full, to the AI INTERACTION LOG.md file in the repo please, and use that log as future references for me requests towards my codebase for this session please
+```
+
+**AI Response 75**:
+```text
+I appended the archived Codex conversation to [AI_INTERACTION_LOG.md](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md). It now includes the four full user prompts and the four full final answers from the archived session, labeled as an imported Codex session and sourced from the archived `.jsonl`.
+
+For this current chat session, I’ll use that log as reference context when you ask me about the codebase, so we can build on that prior work instead of re-deriving it. If you want, I can also append the internal progress/commentary messages from that archived session too, but right now I kept it to your prompts and my final answers.
+```
+
+---
+
+**User Prompt 76** [2026-04-23 09:28:09 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## My request for Codex:
+okay so the app works regarding the venue and vendor search for shareholder purposes for now. There are two things that i would now like to make work before were basically done with a fully functioning prototype. I want people to add vendors to the event after they created it, and on click for a new pop up style window to pop up showing the vendors Website adress, email and phone number if they have one. Second, i want the survey link option to actually function. Im not sure why it creates a nonworking link pointing a t nothing atm, can you take a look at that please?
+```
+
+**AI Response 76**:
+```text
+I wired both features in.
+
+Vendors can now be attached to an event and stay there. On the backend I added event-vendor persistence and an authenticated `POST /api/events/{id}/vendors` flow, and the event response now includes attached vendors. On Android, [VendorSuggestionsActivity](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/VendorSuggestionsActivity.java), [EventDetailActivity](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/EventDetailActivity.java), and [VendorAdapter](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/adapter/VendorAdapter.java) now let organisers/admins add vendors from the suggestion screen, show attached vendors in the event detail screen, and open a popup dialog with address, website, email, and phone when you tap a vendor. I also added email extraction from OSM vendor results, so that data shows up when available.
+
+I also fixed the broken invite-link flow. I treated your “survey link” note as the existing share/invite link, because that was the only link path in the app that was generating something that could point nowhere. The app now shares a real web invite URL based on your backend base URL instead of a bare custom scheme, and the backend invite page now deep-links correctly to `eventplanner://join/{token}` instead of the wrong `eventplanner://invite/{token}`.
+
+Verification: targeted backend tests passed with `EventServiceTest`, `EventControllerTest`, and `VendorControllerTest`, and the Android app source compiles with `./gradlew :app:compileDebugJavaWithJavac`. Two unrelated existing test issues are still present: full backend `./gradlew test` fails because `ProjectApplicationTests.contextLoads()` tries to connect to MySQL, and full Android `:app:testDebugUnitTest` fails because the existing [ExampleUnitTest.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/test/java/com/example/myapplication/ExampleUnitTest.java) is missing its JUnit dependency setup.
+```
+
+---
+
+**User Prompt 77** [2026-04-23 09:54:36 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: tasks
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## My request for Codex:
+alright another issue i currently have it that i can log in once, everything works fine, and when i try to reuse the app, even after forceclosing it, im getting a server timout issue, despite Render saying that the server is still up and running. could this be an issue with the android lifecycle or where could that problem lie
+```
+
+**AI Response 77**:
+```text
+Based on the code, this does not look like a classic Android lifecycle bug first.
+
+What the app does right now is:
+- It persists the JWT in [AuthManager.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/auth/AuthManager.java:10).
+- On reopen, [LoginActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/auth/LoginActivity.java:25) skips login if any token exists.
+- Then [MainActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/MainActivity.java:103) immediately calls the backend again in `onResume()`.
+- Your [RetrofitClient.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/RetrofitClient.java:25) uses OkHttp defaults, so there’s no custom longer timeout for a slow first request.
+
+The most likely causes are:
+
+- Slow first backend request after inactivity.
+Your app reopens straight into a network call, so if Render is slow to answer, or your backend’s first DB query is slow, Android just shows a timeout. This is especially plausible because your backend is on Render but your database is on your own hardware. Render can be “up” while the DB connection path is slow or stale.
+
+- Stale DB connections on the backend.
+This is honestly one of the strongest suspects given your setup. The server process may still be running, but its pooled MySQL connections may have gone stale after idle time. Then the first request after reopening hangs while the backend tries to use or re-establish them.
+
+- Persisted token state is too naive.
+`isLoggedIn()` only checks “token exists”, not “token is still valid”. So the app assumes the session is fine on reopen even if it really should re-authenticate. That usually causes auth errors rather than timeouts, but it still makes startup behavior less reliable.
+
+So my short answer is: the problem is probably not the Activity lifecycle itself. It is more likely in the startup network path, especially the first authenticated request plus Render-to-home-DB connectivity.
+
+The best way to confirm is:
+- Check Logcat for the exact `OkHttp` failure message. Your client already has BODY logging enabled.
+- Note which request fails first on reopen.
+- Check Render logs at the same timestamp.
+If Render sees the request but responds late, it’s backend/DB.
+If Render never sees it, it’s client/network.
+
+The first fixes I’d recommend are:
+- Add explicit OkHttp timeouts in [RetrofitClient.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/RetrofitClient.java:25), like 30-60s.
+- Stop treating any non-null token as a valid session.
+- Use the authenticated `/api/events/my` endpoint instead of the organiser-id route for startup loading.
+- Add DB connection keepalive/max-lifetime tuning on the backend for your self-hosted MySQL setup.
+
+If you want, I can patch the Android client and the Spring Boot backend next to make this much more robust.
+```
+
+---
+
+**User Prompt 78** [2026-04-23 10:34:29 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: tasks
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+- ApiService.java: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/ApiService.java
+
+## My request for Codex:
+the DB is also hosted on Render and up and running. woud you still recommend the same fixes?
+```
+
+**AI Response 78**:
+```text
+Yes, mostly the same fixes, but I’d reprioritize them.
+
+Since the DB is also on Render, I’d drop the “Render to home-hosted DB path” suspicion. But I would still strongly recommend:
+- adding explicit OkHttp timeouts in [RetrofitClient.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/RetrofitClient.java:25)
+- making session handling smarter than `token != null` in [AuthManager.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/auth/AuthManager.java:40)
+- tightening the app’s startup request flow in [MainActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/MainActivity.java:103)
+
+What changes with Render + Render is this:
+- lifecycle is still unlikely to be the real root cause
+- cold start / slow first response becomes more likely
+- stale or slow backend-side pooled DB connections can still happen after idle time, even when both services show as “up”
+
+One nuance: your JWT expiry is `1 hour` on the backend, so an old token should normally cause `401`, not a timeout. That makes token expiry worth fixing, but probably not the main cause of the timeout symptom.
+
+So my current ranking would be:
+1. client timeout + retry visibility
+2. backend cold-start / first-request slowness
+3. backend connection-pool resilience
+4. token/session validation cleanup
+
+The quickest useful fixes are:
+- set connect/read/write timeouts explicitly in the Android OkHttp client
+- add an auth/network interceptor so you can distinguish `401`, `503`, and real socket timeout
+- stop auto-skipping login purely because a token exists
+- switch startup loading to the dedicated `/api/events/my` endpoint instead of the organiser-id route
+
+If you want, I can implement those hardening fixes next.
+```
+
+---
+
+**User Prompt 79** [2026-04-27 08:31:37 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+hm ye sure lets implement this and see what changes. Also, about the invite link, how do we approach that?
+```
+
+**AI Response 79**:
+```text
+I implemented the session/network hardening and tightened the invite-link flow.
+
+On the Android side, [AuthManager.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/auth/AuthManager.java) now checks JWT expiry instead of treating any stored token as valid, [RetrofitClient.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/network/RetrofitClient.java) now has explicit OkHttp timeouts plus clearer timeout messaging and automatic session clearing on `401`, and [MainActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/MainActivity.java) now uses the dedicated `/api/events/my` endpoint for the startup load. I also updated [LoginActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/auth/LoginActivity.java) and [JoinEventActivity.java](/home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/app/src/main/java/com/example/myapplication/JoinEventActivity.java) so a pending invite survives login and resumes correctly after authentication.
+
+On the backend side, I added some Hikari keepalive/max-lifetime settings in [application.properties](/home/olly/AndroidStudioProjects/SpringBoot_Backend/src/main/resources/application.properties) to make idle-then-reuse behavior less brittle.
+
+About the invite link: the clean approach is now:
+- share the real web URL like `https://.../invite/{token}`
+- let that open the invite landing page
+- from there, deep-link into `eventplanner://join/{token}`
+- if the user isn’t logged in, send them to login and then resume the join automatically
+
+That’s the safest pattern because raw custom-scheme links don’t preview well in chat apps, while the web page gives you a stable share target plus a proper app handoff.
+
+Verification passed:
+- `./gradlew :app:compileDebugJavaWithJavac`
+- backend targeted tests for `EventServiceTest`, `EventControllerTest`, and `VendorControllerTest`
+
+The next thing I’d try on your device is:
+1. log in
+2. fully close the app
+3. reopen after a short wait and after a longer idle period
+4. if it still fails, check whether the new toast says timeout vs auth, because that will narrow the remaining issue fast
+```
+
+---
+
+**User Prompt 80** [2026-04-27 08:47:49 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+alright perfect, push that to git please and ill get to bugtesting. I  can already start the app on my phone via android studio right since thats not  dependant on git?
+```
+
+**AI Response 80**:
+```text
+Pushed both repos successfully.
+
+- Android: `dd7f3dd` to `origin/master` (`event-planer-android`)
+- Backend: `0e14dd7` to `origin/master` (`event-planer-backend`)
+
+Yes, you can absolutely start and run the app from Android Studio on your phone without git. Running/installing/debugging is local build + deploy from your machine; git is only for version control and sharing code.
+
+I left your unrelated local edits untouched (`AI_INTERACTION_LOG.md`, example test files, and backend `.codex`).
+```
+
+---
+
+**User Prompt 81** [2026-04-27 08:51:07 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## Open tabs:
+- AI_INTERACTION_LOG.md: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+ good info thanks. please check your own log file and append every missing prompt to my log file, prompt + your answers
+```
+
+**AI Response 81**:
+```text
+Checked the active Codex session log and appended every missing prompt/answer pair to AI_INTERACTION_LOG.md, including the newly added entries from User Prompt 73 through User Prompt 80 in full.
+```
+
+---
+**User promt 82**
+okay amazing the vendor selection after creating the event and adding them to it works perfectly. Now for this part i need 3 things done: The website adress of the vendor if they have one should be a fully clickable hyperlink that opens a browser and leads to that website. 2nd., i need the vendor screen to have a "back to main menue" button in the end because otherwhise you can only leave it by pressing the back button x times.
+3rd. i want the user to be able to select vendors after creating the event when edditing it, in case they missed or wanna remove some of them.
+
+for the venue search, it works fine for shareholder purposes but always times out if the radius is 25+km so we can cap that at 10km for now maybe?
+
+and the invite link now points to an actual website, but tells me i have no authority to view it, why is that
+
+**AI Response 82*
+
+
+Worked for 5m 17s
+Implemented all five items and both projects compile.
+
+Vendor websites are now clickable and open the browser from the vendor list in VendorAdapter.java (line 1). URLs without scheme are normalized to https://....
+
+Vendor screen now has a bottom Back to Main Menu button in activity_vendor_suggestions.xml (line 1), wired in VendorSuggestionsActivity.java (line 1).
+
+Vendor management after creation now supports add and remove:
+
+Backend delete API added: EventController.java (line 183), EventService.java (line 297), EventVendorRepository.java (line 1).
+Android API call added: ApiService.java (line 72).
+Vendor action button now toggles Add to Event / Remove from Event in VendorAdapter.java (line 95) and VendorSuggestionsActivity.java (line 70).
+Edit flow now includes a Manage Vendors button in activity_edit_event.xml (line 147) and launch logic in EditEventActivity.java (line 90), with context passed from EventDetailActivity.java (line 183).
+Venue radius is capped at 10km now:
+
+Android UI/options capped to max 10km in EventOptionsActivity.java (line 35).
+Android request clamp in VenueSuggestionsActivity.java (line 36).
+Backend hard cap set to 10,000m in VenueService.java (line 49).
+Invite “no authority” explanation:
+That message comes from the protected endpoint GET /api/events/{id}/invite-link, which is organiser/admin-only. If that endpoint is hit by a non-admin/non-organiser user, backend returns that exact error. I also updated the invite webpage secondary button to avoid API confusion and keep it on public invite pages in invite.html (line 241).
+
+Verification run:
+
+./gradlew -q compileJava (backend) passed
+./gradlew -q :app:compileDebugJavaWithJavac (Android) passed
+
+**User Prompt 83** [2026-04-27 09:15:38 UTC]:
+```text
+# Context from my IDE setup:
+
+## Active file: /home/olly/AndroidStudioProjects/AndroidStudio_Phone_Connection/AI_INTERACTION_LOG.md
+
+## My request for Codex:
+alright can you please push the last changes made to git and change my ai interaction log file please
+```
+
+**AI Response 83**:
+```text
+Pushed the latest backend changes to GitHub and updated AI_INTERACTION_LOG.md with this new entry.
+
+- Backend repo: event-planer-backend
+- Branch: master
+- Commit pushed: 4756369
+- Remote: origin/master
+- Compile check before push: ./gradlew compileJava (BUILD SUCCESSFUL)
+
+Included changes in the pushed commit:
+- Added endpoint to remove vendors from events
+- Added repository lookup for event vendor by eventId + osmId
+- Added service method to remove vendor from event
+- Reduced venue search max radius from 50km to 10km
+- Updated invite page link text/target to copyable invite page
+```
+
+---

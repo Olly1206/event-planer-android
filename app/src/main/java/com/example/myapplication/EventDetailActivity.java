@@ -75,7 +75,7 @@ public class EventDetailActivity extends BaseActivity {
             }
 
             @Override
-            public void onVendorActionClicked(VendorResponse vendor) {
+            public void onVendorActionClicked(VendorResponse vendor, boolean alreadyAdded) {
             }
         });
         recyclerSelectedVendors.setLayoutManager(new LinearLayoutManager(this));
@@ -171,7 +171,7 @@ public class EventDetailActivity extends BaseActivity {
         // Share invite button — shown when backend granted invite token (organiser/admin)
         if (event.inviteToken != null) {
             btnShareInvite.setVisibility(View.VISIBLE);
-            btnShareInvite.setOnClickListener(v -> shareInviteLink(event.inviteToken));
+            btnShareInvite.setOnClickListener(v -> shareInviteLink(event.id));
         } else {
             btnShareInvite.setVisibility(View.GONE);
         }
@@ -192,6 +192,22 @@ public class EventDetailActivity extends BaseActivity {
                 intent.putExtra("status", event.status);
                 if (event.maxParticipants != null)
                     intent.putExtra("maxParticipants", event.maxParticipants.intValue());
+                ArrayList<String> selectedOptions = event.selectedOptions != null
+                        ? new ArrayList<>(event.selectedOptions)
+                        : new ArrayList<>();
+                intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS, selectedOptions);
+
+                String cityName = event.locationName != null ? event.locationName : "";
+                if (cityName.contains("(")) {
+                    cityName = cityName.substring(0, cityName.indexOf("(")).trim();
+                }
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, cityName);
+
+                long[] selectedIds = selectedVendors.stream()
+                        .filter(vendor -> vendor.osmId != null)
+                        .mapToLong(vendor -> vendor.osmId)
+                        .toArray();
+                intent.putExtra(VendorSuggestionsActivity.EXTRA_SELECTED_VENDOR_IDS, selectedIds);
                 startActivity(intent);
             });
         }
@@ -303,12 +319,34 @@ public class EventDetailActivity extends BaseActivity {
         });
     }
 
-    private void shareInviteLink(String token) {
-        String invitePageUrl = RetrofitClient.getBaseUrl() + "invite/" + token;
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT,
-                "Join my event! Open this link: " + invitePageUrl);
-        startActivity(Intent.createChooser(shareIntent, "Share invite via"));
+    private void shareInviteLink(Long eventId) {
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        
+        // Fetch the short code for safer sharing (avoids WAF blocks on long UUIDs)
+        api.getShortInviteCode(eventId).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String shortCode = response.body().replaceAll("\"", "");  // Strip quotes from JSON string
+                    String shortInviteUrl = RetrofitClient.getBaseUrl() + "s/" + shortCode;
+                    
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT,
+                            "Join my event! Open this link: " + shortInviteUrl);
+                    startActivity(Intent.createChooser(shareIntent, "Share invite via"));
+                } else {
+                    Toast.makeText(EventDetailActivity.this,
+                            "Failed to generate share link (code " + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(EventDetailActivity.this,
+                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
