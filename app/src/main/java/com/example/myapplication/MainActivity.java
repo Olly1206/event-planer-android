@@ -74,12 +74,15 @@ public class MainActivity extends BaseActivity {
                 int checkedId = checkedIds.get(0);
                 if (checkedId == R.id.chipCreated) {
                     searchInputLayout.setVisibility(View.GONE);
+                    adapter.setJoinListener(null);
                     loadCreatedEvents();
                 } else if (checkedId == R.id.chipJoined) {
                     searchInputLayout.setVisibility(View.GONE);
+                    adapter.setJoinListener(null);
                     loadJoinedEvents();
                 } else if (checkedId == R.id.chipDiscover) {
                     searchInputLayout.setVisibility(View.VISIBLE);
+                    adapter.setJoinListener(this::joinDiscoverEvent);
                     loadAllPublicEvents();
                 }
             }
@@ -125,10 +128,13 @@ public class MainActivity extends BaseActivity {
 
         int checkedId = chipGroupFilter.getCheckedChipId();
         if (checkedId == R.id.chipJoined) {
+            adapter.setJoinListener(null);
             loadJoinedEvents();
         } else if (checkedId == R.id.chipDiscover) {
+            adapter.setJoinListener(this::joinDiscoverEvent);
             loadAllPublicEvents();
         } else {
+            adapter.setJoinListener(null);
             loadCreatedEvents();
         }
     }
@@ -232,6 +238,41 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                showNetworkFailure(t);
+            }
+        });
+    }
+
+    private void joinDiscoverEvent(EventResponse event) {
+        if (event == null || event.id == null) {
+            Toast.makeText(this, "Cannot join this event right now", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.joinEvent(event.id).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(MainActivity.this,
+                            "Joined event!", Toast.LENGTH_SHORT).show();
+                    loadAllPublicEvents();
+                } else if (response.code() == 409 || response.code() == 400) {
+                    Toast.makeText(MainActivity.this,
+                            "You're already a member of this event", Toast.LENGTH_SHORT).show();
+                    loadAllPublicEvents();
+                } else if (response.code() == 401 || response.code() == 403) {
+                    Toast.makeText(MainActivity.this,
+                            "Session expired — please log in again", Toast.LENGTH_SHORT).show();
+                    redirectToLogin();
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "Failed to join (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
                 showNetworkFailure(t);
             }
         });
