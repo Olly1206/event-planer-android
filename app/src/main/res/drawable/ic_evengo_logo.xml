@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <path
+        android:fillColor="#1AFFFFFF"
+        android:pathData="M80,80m-70,0a70,70 0,1 0,140 0a70,70 0,1 0,-140 0" />
+    <path
+        android:fillColor="@color/surface_card"
+        android:pathData="M37,43h70a12,12 0,0 1,12 12v54a12,12 0,0 1,-12 12h-70a12,12 0,0 1,-12 -12v-54a12,12 0,0 1,12 -12z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M37,43h70a12,12 0,0 1,12 12v54a12,12 0,0 1,-12 12h-70a12,12 0,0 1,-12 -12v-54a12,12 0,0 1,12 -12z"
+        android:strokeColor="@color/brand_purple_primary"
+        android:strokeWidth="5"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="@color/brand_purple_primary"
+        android:pathData="M25,62h94v14h-94z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M52,34v20M92,34v20"
+        android:strokeColor="@color/text_primary"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M43,93c12,-13 28,-13 40,0s28,13 40,0"
+        android:strokeColor="@color/brand_purple_primary"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="@color/brand_purple_primary"
+        android:pathData="M71,93a14,14 0,1 0,28 0a14,14 0,1 0,-28 0" />
+    <path
+        android:fillColor="@color/text_on_primary"
+        android:pathData="M80,91l6,6l14,-18l5,5l-18,24l-13,-12z" />
+</vector>
