@@ -83,7 +83,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="4dp"
-                        android:hint="City / Venue (type to search)"
+                        android:hint="City (type to search)"
                         app:boxBackgroundColor="@color/surface_background"
                         app:boxStrokeColor="@color/brand_purple_end"
                         app:hintTextColor="@color/text_hint">
@@ -117,16 +117,6 @@
                             android:layout_height="wrap_content"
                             android:minWidth="140dp" />
                     </LinearLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnBrowseVenues"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:enabled="false"
-                        android:text="Browse Venue Suggestions"
-                        app:strokeColor="@color/brand_purple_end"
-                        android:textColor="@color/brand_purple_primary" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -256,7 +246,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_button_primary"
-            android:text="Finalize Selection"
+            android:text="Show Venues"
             android:textColor="@color/white"
             android:textSize="16sp"
             app:backgroundTint="@null" />

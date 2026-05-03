@@ -8,7 +8,6 @@
     android:background="@color/surface_background"
     tools:context=".TimeframeSelectionActivity">
 
-    <!-- Gradient header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,11 +31,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="Pick a date range — we'll show the weather forecast"
+            android:text="Adjust the possible date range"
             android:textSize="13sp"
             android:textColor="#DDFFFFFF"
             android:textAlignment="center" />
-
     </LinearLayout>
 
     <ScrollView
@@ -53,12 +51,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/surface_card"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/surface_card"
                 app:strokeColor="@color/brand_purple_end"
-                app:strokeWidth="1dp"
-                android:layout_marginBottom="16dp">
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -69,40 +67,93 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"
+                        android:layout_marginBottom="10dp"
                         android:text="Earliest possible date"
-                        android:textSize="14sp"
                         android:textColor="@color/brand_purple_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
-                    <Button
-                        android:id="@+id/btnStartDate"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="20dp"
-                        android:text="Pick Date"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:strokeColor="@color/brand_purple_primary"
-                        android:textColor="@color/brand_purple_primary" />
+                        android:layout_marginBottom="22dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStartPrevious"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:text="-"
+                            android:textColor="@color/brand_purple_primary"
+                            app:strokeColor="@color/brand_purple_end" />
+
+                        <TextView
+                            android:id="@+id/tvStartDateValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="12dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStartNext"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:text="+"
+                            android:textColor="@color/brand_purple_primary"
+                            app:strokeColor="@color/brand_purple_end" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"
+                        android:layout_marginBottom="10dp"
                         android:text="Latest possible date"
-                        android:textSize="14sp"
                         android:textColor="@color/brand_purple_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
-                    <Button
-                        android:id="@+id/btnEndDate"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Pick Date"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:strokeColor="@color/brand_purple_primary"
-                        android:textColor="@color/brand_purple_primary" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnEndPrevious"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:text="-"
+                            android:textColor="@color/brand_purple_primary"
+                            app:strokeColor="@color/brand_purple_end" />
+
+                        <TextView
+                            android:id="@+id/tvEndDateValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="12dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnEndNext"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:text="+"
+                            android:textColor="@color/brand_purple_primary"
+                            app:strokeColor="@color/brand_purple_end" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -112,19 +163,16 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
-                android:text="No timeframe selected"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary" />
-
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom action -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:background="@color/surface_card">
+        android:background="@color/surface_card"
+        android:padding="16dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCreateSurvey"
@@ -135,7 +183,5 @@
             android:textColor="@color/white"
             android:textSize="16sp"
             app:backgroundTint="@null" />
-
     </LinearLayout>
-
 </LinearLayout>

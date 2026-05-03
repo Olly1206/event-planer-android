@@ -37,6 +37,7 @@ public class VendorSuggestionsActivity extends BaseActivity {
     public static final String EXTRA_EVENT_ID = "event_id";
     public static final String EXTRA_ALLOW_ADD = "allow_add_vendor";
     public static final String EXTRA_SELECTED_VENDOR_IDS = "selected_vendor_ids";
+    public static final String EXTRA_RADIUS = "vendor_radius";
 
     private final List<VendorResponse> vendorList = new ArrayList<>();
     private final Set<Long> selectedVendorIds = new HashSet<>();
@@ -93,6 +94,7 @@ public class VendorSuggestionsActivity extends BaseActivity {
 
         String city = getIntent().getStringExtra(EXTRA_CITY);
         ArrayList<String> options = getIntent().getStringArrayListExtra(EXTRA_OPTIONS);
+        int radiusMeters = getIntent().getIntExtra(EXTRA_RADIUS, 5000);
 
         if (city == null || city.isEmpty()) {
             Toast.makeText(this, "No city provided", Toast.LENGTH_SHORT).show();
@@ -105,7 +107,7 @@ public class VendorSuggestionsActivity extends BaseActivity {
             return;
         }
 
-        loadVendors(city, options);
+        loadVendors(city, radiusMeters, options);
     }
 
     private void addVendorToEvent(VendorResponse vendor) {
@@ -184,13 +186,13 @@ public class VendorSuggestionsActivity extends BaseActivity {
         });
     }
 
-    private void loadVendors(String city, List<String> options) {
+    private void loadVendors(String city, int radiusMeters, List<String> options) {
         progress.setVisibility(View.VISIBLE);
         recycler.setVisibility(View.GONE);
         tvNoVendors.setVisibility(View.GONE);
 
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
-        api.getVendors(city, 5000, options)
+        api.getVendors(city, radiusMeters, options)
                 .enqueue(new Callback<List<VendorResponse>>() {
                     @Override
                     public void onResponse(Call<List<VendorResponse>> call,

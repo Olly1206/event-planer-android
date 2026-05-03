@@ -13,9 +13,6 @@ import android.widget.ListPopupWindow;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-
 import androidx.annotation.NonNull;
 
 import com.example.myapplication.network.NominatimService;
@@ -57,45 +54,10 @@ public class EventOptionsActivity extends BaseActivity {
     private boolean suppressNextSearch = false;
 
     private NominatimService nominatimService;
-    private Button btnBrowseVenues;
-    private ActivityResultLauncher<Intent> venueLauncher;
-    private VenueSelection selectedVenue;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_options);
-
-        // Initialize ActivityResultLauncher
-        venueLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() != RESULT_OK || result.getData() == null) {
-                        return;
-                    }
-                    Intent data = result.getData();
-                    VenueSelection venue = new VenueSelection();
-                    venue.name = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_NAME);
-                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_OSM_ID)) {
-                        venue.osmId = data.getLongExtra(VenueSuggestionsActivity.RESULT_VENUE_OSM_ID, 0);
-                    }
-                    venue.address = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_ADDRESS);
-                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_LAT)) {
-                        venue.lat = data.getDoubleExtra(VenueSuggestionsActivity.RESULT_VENUE_LAT, 0);
-                    }
-                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_LON)) {
-                        venue.lon = data.getDoubleExtra(VenueSuggestionsActivity.RESULT_VENUE_LON, 0);
-                    }
-                    venue.category = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_CATEGORY);
-                    venue.website = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_WEBSITE);
-                    venue.phone = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_PHONE);
-                    venue.openingHours = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_HOURS);
-                    if (venue.name != null && !venue.name.isEmpty()) {
-                        selectedVenue = venue;
-                        etLocation.setText(venue.name);
-                    }
-                }
-        );
 
         // Build a dedicated Retrofit instance for Nominatim (separate host from backend)
         OkHttpClient nominatimClient = new OkHttpClient.Builder()
@@ -117,7 +79,6 @@ public class EventOptionsActivity extends BaseActivity {
         TextInputEditText etTitle = findViewById(R.id.etEventTitle);
         etLocation = findViewById(R.id.etLocationName);
         Spinner spinnerRadius = findViewById(R.id.spinnerRadius);
-        btnBrowseVenues = findViewById(R.id.btnBrowseVenues);
 
         // Populate radius spinner
         ArrayAdapter<String> radiusAdapter = new ArrayAdapter<>(
@@ -140,7 +101,6 @@ public class EventOptionsActivity extends BaseActivity {
             etLocation.setText(selectedCityDisplay);
             etLocation.setSelection(selectedCityDisplay.length());
             listPopupWindow.dismiss();
-            btnBrowseVenues.setEnabled(true);
         });
 
         etLocation.addTextChangedListener(new TextWatcher() {
@@ -154,7 +114,6 @@ public class EventOptionsActivity extends BaseActivity {
                 if (!typed.equals(selectedCityDisplay)) {
                     selectedCityName    = "";
                     selectedCityDisplay = "";
-                    btnBrowseVenues.setEnabled(false);
                 }
                 if (debounceRunnable != null) debounceHandler.removeCallbacks(debounceRunnable);
                 // Text was set programmatically after picking a suggestion — skip the search
@@ -169,25 +128,6 @@ public class EventOptionsActivity extends BaseActivity {
                 debounceRunnable = () -> fetchCitySuggestions(typed);
                 debounceHandler.postDelayed(debounceRunnable, SEARCH_DEBOUNCE_MS);
             }
-        });
-
-        btnBrowseVenues.setOnClickListener(v -> {
-            String locType = "BOTH";
-            // Peek at current checkbox state for the query
-            CheckBox tmpOutside = findViewById(R.id.cbOutside);
-            CheckBox tmpInside  = findViewById(R.id.cbInside);
-            if (tmpOutside.isChecked()) locType = "OUTDOOR";
-            else if (tmpInside.isChecked()) locType = "INDOOR";
-
-            int radius = RADIUS_VALUES[spinnerRadius.getSelectedItemPosition()];
-            int radiusMeters = radius > 0 ? radius * 1000 : 5000;
-
-            Intent intent = new Intent(this, VenueSuggestionsActivity.class);
-            intent.putExtra(VenueSuggestionsActivity.EXTRA_CITY,          selectedCityName);
-            intent.putExtra(VenueSuggestionsActivity.EXTRA_RADIUS,        radiusMeters);
-            intent.putExtra(VenueSuggestionsActivity.EXTRA_LOCATION_TYPE, locType);
-            intent.putExtra(VenueSuggestionsActivity.EXTRA_EVENT_TYPE,    eventType);
-            venueLauncher.launch(intent);
         });
 
         Button btnFinalize = findViewById(R.id.btnFinalize);
@@ -240,18 +180,14 @@ public class EventOptionsActivity extends BaseActivity {
                     ? selectedCityDisplay + " (" + radiusKm + " km radius)"
                     : selectedCityDisplay;
 
-            if (selectedVenue != null && selectedVenue.name != null) {
-                locationName = selectedVenue.name;
-            }
-
             ArrayList<String> selectedOptions = new ArrayList<>();
             if (cbCatering.isChecked())      selectedOptions.add("Catering");
             if (cbMusic.isChecked())         selectedOptions.add("Live Music");
-            if (cbGuestSpeakers.isChecked()) selectedOptions.add("Photography");
+            if (cbGuestSpeakers.isChecked()) selectedOptions.add("Guest Speakers");
             if (cbSecurity.isChecked())      selectedOptions.add("Security Staff");
             if (cbEquipment.isChecked())     selectedOptions.add("AV Equipment");
 
-            Intent intent = new Intent(EventOptionsActivity.this, TimeframeSelectionActivity.class);
+            Intent intent = new Intent(EventOptionsActivity.this, VenueSuggestionsActivity.class);
             intent.putExtra("EVENT_TYPE",        eventType);
             intent.putExtra("EVENT_TITLE",        title);
             intent.putExtra("LOCATION_NAME",      locationName);     // stored in DB (with radius)
@@ -259,31 +195,12 @@ public class EventOptionsActivity extends BaseActivity {
             intent.putExtra("LOCATION_TYPE",      locationType);
             intent.putExtra("LOCATION_RADIUS_KM", radiusKm);
             intent.putStringArrayListExtra("SELECTED_OPTIONS", selectedOptions);
-            if (selectedVenue != null) {
-                if (selectedVenue.osmId != null) intent.putExtra("VENUE_OSM_ID", selectedVenue.osmId);
-                intent.putExtra("VENUE_NAME", selectedVenue.name);
-                intent.putExtra("VENUE_ADDRESS", selectedVenue.address);
-                if (selectedVenue.lat != null) intent.putExtra("VENUE_LAT", selectedVenue.lat);
-                if (selectedVenue.lon != null) intent.putExtra("VENUE_LON", selectedVenue.lon);
-                intent.putExtra("VENUE_CATEGORY", selectedVenue.category);
-                intent.putExtra("VENUE_WEBSITE", selectedVenue.website);
-                intent.putExtra("VENUE_PHONE", selectedVenue.phone);
-                intent.putExtra("VENUE_HOURS", selectedVenue.openingHours);
-            }
+            intent.putExtra(VenueSuggestionsActivity.EXTRA_CITY,          selectedCityName);
+            intent.putExtra(VenueSuggestionsActivity.EXTRA_RADIUS,        radiusKm > 0 ? radiusKm * 1000 : 5000);
+            intent.putExtra(VenueSuggestionsActivity.EXTRA_LOCATION_TYPE, locationType);
+            intent.putExtra(VenueSuggestionsActivity.EXTRA_EVENT_TYPE,    eventType);
             startActivity(intent);
         });
-    }
-
-    private static class VenueSelection {
-        Long osmId;
-        String name;
-        String address;
-        Double lat;
-        Double lon;
-        String category;
-        String website;
-        String phone;
-        String openingHours;
     }
 
     private void fetchCitySuggestions(String query) {

@@ -1,8 +1,5 @@
 package com.example.myapplication;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,8 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
@@ -23,6 +20,8 @@ import com.example.myapplication.network.dto.NamedItemResponse;
 import com.example.myapplication.network.dto.WeatherData;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,16 +32,21 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Step 4 of event creation.
+ * Step 5 of event creation.
  *
- * Shows the weather forecast for each day in the requested date range so the
- * user can choose the best day for their event. Tapping "Select" on a day card
- * opens two time pickers (start time, end time), then submits the full event
- * creation request to the backend.
+ * Outdoor/mixed events show weather-backed day cards. Indoor events skip the
+ * forecast request and show the same custom day picker without weather details.
+ * Time selection is also custom to match the app instead of using Android's
+ * built-in picker dialogs.
  */
 public class WeatherSurveyResultsActivity extends BaseActivity {
 
+    private static final DateTimeFormatter DAY_DISPLAY_FORMAT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy");
+    private static final int MAX_DAYS_SHOWN = 31;
+
     private String eventType, eventTitle, locationName, locationCity, locationType;
+    private int locationRadiusKm;
     private ArrayList<String> selectedOptions;
     private String startDate, endDate;
     private Long venueOsmId;
@@ -54,26 +58,72 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
     private String venueWebsite;
     private String venuePhone;
     private String venueHours;
+    private boolean skipWeather;
 
     private LinearLayout llDayContainer;
     private ProgressBar progressBar;
     private TextView tvError;
     private Button btnSaveEvent;
+    private View timePanel;
+    private TextView tvSelectedDay;
+    private TextView tvStartTime;
+    private TextView tvEndTime;
+    private Button btnCreateEvent;
+    private String selectedDate;
+    private int startMinutes = 9 * 60;
+    private int endMinutes = 18 * 60;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather_survey_results);
 
-        // Receive all event metadata forwarded from TimeframeSelectionActivity
-        eventType       = getIntent().getStringExtra("EVENT_TYPE");
-        eventTitle      = getIntent().getStringExtra("EVENT_TITLE");
-        locationName    = getIntent().getStringExtra("LOCATION_NAME");
-        locationCity    = getIntent().getStringExtra("LOCATION_CITY");
-        locationType    = getIntent().getStringExtra("LOCATION_TYPE");
+        readIncomingEventData();
+
+        llDayContainer = findViewById(R.id.llDayContainer);
+        progressBar = findViewById(R.id.progressBar);
+        tvError = findViewById(R.id.tvError);
+        btnSaveEvent = findViewById(R.id.btnSaveEvent);
+        timePanel = findViewById(R.id.timePanel);
+        tvSelectedDay = findViewById(R.id.tvSelectedDay);
+        tvStartTime = findViewById(R.id.tvStartTime);
+        tvEndTime = findViewById(R.id.tvEndTime);
+        btnCreateEvent = findViewById(R.id.btnCreateEvent);
+
+        wireTimeControls();
+
+        String city = (locationCity != null && !locationCity.isEmpty()) ? locationCity
+                : (locationName != null && !locationName.isEmpty()) ? locationName
+                : "London";
+
+        TextView tvTitle = findViewById(R.id.tvWeatherTitle);
+        TextView tvSubtitle = findViewById(R.id.tvWeatherSubtitle);
+
+        if (skipWeather) {
+            tvTitle.setText("Select your event day");
+            tvSubtitle.setText("Indoor event - no weather forecast needed");
+            populatePlainDays();
+        } else {
+            tvTitle.setText("Choose your event date");
+            tvSubtitle.setText("Forecast for " + city + "  ·  " + startDate + " to " + endDate);
+            fetchWeatherRange(city);
+        }
+
+        btnSaveEvent.setOnClickListener(v -> populatePlainDays());
+    }
+
+    private void readIncomingEventData() {
+        eventType = getIntent().getStringExtra("EVENT_TYPE");
+        eventTitle = getIntent().getStringExtra("EVENT_TITLE");
+        locationName = getIntent().getStringExtra("LOCATION_NAME");
+        locationCity = getIntent().getStringExtra("LOCATION_CITY");
+        locationType = getIntent().getStringExtra("LOCATION_TYPE");
+        locationRadiusKm = getIntent().getIntExtra("LOCATION_RADIUS_KM", 0);
         selectedOptions = getIntent().getStringArrayListExtra("SELECTED_OPTIONS");
-        startDate       = getIntent().getStringExtra("START_DATE");
-        endDate         = getIntent().getStringExtra("END_DATE");
+        startDate = getIntent().getStringExtra("START_DATE");
+        endDate = getIntent().getStringExtra("END_DATE");
+        skipWeather = getIntent().getBooleanExtra("SKIP_WEATHER", false)
+                || "INDOOR".equalsIgnoreCase(locationType);
         if (getIntent().hasExtra("VENUE_OSM_ID")) venueOsmId = getIntent().getLongExtra("VENUE_OSM_ID", 0);
         venueName = getIntent().getStringExtra("VENUE_NAME");
         venueAddress = getIntent().getStringExtra("VENUE_ADDRESS");
@@ -84,48 +134,12 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
         venuePhone = getIntent().getStringExtra("VENUE_PHONE");
         venueHours = getIntent().getStringExtra("VENUE_HOURS");
         if (selectedOptions == null) selectedOptions = new ArrayList<>();
-
-        llDayContainer = findViewById(R.id.llDayContainer);
-        progressBar    = findViewById(R.id.progressBar);
-        tvError        = findViewById(R.id.tvError);
-
-        // Use the raw city name for geocoding; fall back to the full locationName
-        String city = (locationCity != null && !locationCity.isEmpty()) ? locationCity
-                    : (locationName != null && !locationName.isEmpty()) ? locationName
-                    : "London";
-
-        TextView tvSubtitle = findViewById(R.id.tvWeatherSubtitle);
-        tvSubtitle.setText("Forecast for " + city + "  ·  " + startDate + " → " + endDate);
-
-        // Fallback save button — wired up here, but kept hidden until weather fails
-        btnSaveEvent = findViewById(R.id.btnSaveEvent);
-        btnSaveEvent.setOnClickListener(v -> pickDateAndSave());
-
-        fetchWeatherRange(city);
     }
-
-    // ── Save without weather ───────────────────────────────────────────────────
-
-    /** Opens a date picker (defaulting to startDate) then delegates to the existing time-pick flow. */
-    private void pickDateAndSave() {
-        int y = 2026, m = 0, d = 1;
-        try {
-            String[] parts = (startDate != null ? startDate : "2026-01-01").split("-");
-            y = Integer.parseInt(parts[0]);
-            m = Integer.parseInt(parts[1]) - 1;
-            d = Integer.parseInt(parts[2]);
-        } catch (Exception ignored) {}
-
-        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            String pickedDate = String.format("%d-%02d-%02d", year, month + 1, dayOfMonth);
-            onDaySelected(pickedDate);
-        }, y, m, d).show();
-    }
-
-    // ── Weather fetch ──────────────────────────────────────────────────────────
 
     private void fetchWeatherRange(String city) {
         progressBar.setVisibility(View.VISIBLE);
+        tvError.setVisibility(View.GONE);
+        btnSaveEvent.setVisibility(View.GONE);
         llDayContainer.removeAllViews();
 
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
@@ -136,12 +150,13 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
                                    @NonNull Response<List<WeatherData>> response) {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    populateDays(response.body());
+                    populateWeatherDays(response.body());
                 } else {
                     showError("No forecast available for this period.\n"
-                            + "The forecast service covers up to 16 days from today.\n"
-                            + "Please check your date range, or use the button below to save anyway.");
+                            + "The forecast service covers a limited range.\n"
+                            + "You can still select a day manually.");
                     btnSaveEvent.setVisibility(View.VISIBLE);
+                    btnSaveEvent.setText("Select Day Without Forecast");
                 }
             }
 
@@ -150,58 +165,138 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
                 progressBar.setVisibility(View.GONE);
                 showError("Network error: " + t.getMessage());
                 btnSaveEvent.setVisibility(View.VISIBLE);
+                btnSaveEvent.setText("Select Day Without Forecast");
             }
         });
     }
 
-    // ── Build per-day cards ────────────────────────────────────────────────────
-
-    private void populateDays(List<WeatherData> days) {
+    private void populateWeatherDays(List<WeatherData> days) {
+        llDayContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
         for (WeatherData day : days) {
             View card = inflater.inflate(R.layout.item_weather_day, llDayContainer, false);
 
-            ((TextView) card.findViewById(R.id.tvDayDate)).setText(day.date);
+            ((TextView) card.findViewById(R.id.tvDayDate)).setText(formatDisplayDate(day.date));
             ((TextView) card.findViewById(R.id.tvDayTemp)).setText(
                     String.format("%.1f °C  ·  Rain: %d%%", day.temperature, day.humidity));
-            String desc = day.description != null ? day.description : "";
-            ((TextView) card.findViewById(R.id.tvDayDesc)).setText(
-                    desc.substring(0, 1).toUpperCase() + desc.substring(1));
+            String desc = day.description != null && !day.description.isEmpty()
+                    ? day.description.substring(0, 1).toUpperCase() + day.description.substring(1)
+                    : "Forecast available";
+            ((TextView) card.findViewById(R.id.tvDayDesc)).setText(desc);
 
             Button btnSelect = card.findViewById(R.id.btnSelectDay);
+            btnSelect.setText("Select Day");
             btnSelect.setOnClickListener(v -> onDaySelected(day.date));
 
             llDayContainer.addView(card);
         }
     }
 
-    // ── Date selected → pick times → create event ─────────────────────────────
+    private void populatePlainDays() {
+        progressBar.setVisibility(View.GONE);
+        tvError.setVisibility(View.GONE);
+        btnSaveEvent.setVisibility(View.GONE);
+        llDayContainer.removeAllViews();
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        for (String date : buildDateRange()) {
+            View card = inflater.inflate(R.layout.item_weather_day, llDayContainer, false);
+            ((TextView) card.findViewById(R.id.tvDayDate)).setText(formatDisplayDate(date));
+            ((TextView) card.findViewById(R.id.tvDayTemp)).setText("Indoor event");
+            ((TextView) card.findViewById(R.id.tvDayDesc)).setText("Weather forecast skipped");
+            Button btnSelect = card.findViewById(R.id.btnSelectDay);
+            btnSelect.setText("Select Day");
+            btnSelect.setOnClickListener(v -> onDaySelected(date));
+            llDayContainer.addView(card);
+        }
+    }
+
+    private List<String> buildDateRange() {
+        List<String> dates = new ArrayList<>();
+        LocalDate start = parseDateOrToday(startDate);
+        LocalDate end = parseDateOrToday(endDate);
+        if (end.isBefore(start)) {
+            end = start;
+        }
+        LocalDate cursor = start;
+        while (!cursor.isAfter(end) && dates.size() < MAX_DAYS_SHOWN) {
+            dates.add(cursor.toString());
+            cursor = cursor.plusDays(1);
+        }
+        return dates;
+    }
 
     private void onDaySelected(String date) {
-        // Pick start time
-        new TimePickerDialog(this, (view, startH, startMin) ->
-            // Then pick end time
-            new TimePickerDialog(this, (view2, endH, endMin) ->
-                confirmAndCreate(date, startH, startMin, endH, endMin),
-            18, 0, true).show(),
-        9, 0, true).show();
+        selectedDate = date;
+        timePanel.setVisibility(View.VISIBLE);
+        tvSelectedDay.setText(formatDisplayDate(date));
+        updateTimeLabels();
     }
 
-    private void confirmAndCreate(String date, int startH, int startMin, int endH, int endMin) {
-        String startIso = String.format("%sT%02d:%02d:00", date, startH, startMin);
-        String endIso   = String.format("%sT%02d:%02d:00", date, endH, endMin);
-
-        new AlertDialog.Builder(this)
-                .setTitle("Create event?")
-                .setMessage(eventTitle + "\n" + date
-                        + "  " + String.format("%02d:%02d", startH, startMin)
-                        + " – " + String.format("%02d:%02d", endH, endMin))
-                .setPositiveButton("Create", (d, w) -> lookUpTypesAndCreate(startIso, endIso))
-                .setNegativeButton("Cancel", null)
-                .show();
+    private void wireTimeControls() {
+        findViewById(R.id.btnStartMinus).setOnClickListener(v -> adjustStartTime(-15));
+        findViewById(R.id.btnStartPlus).setOnClickListener(v -> adjustStartTime(15));
+        findViewById(R.id.btnEndMinus).setOnClickListener(v -> adjustEndTime(-15));
+        findViewById(R.id.btnEndPlus).setOnClickListener(v -> adjustEndTime(15));
+        findViewById(R.id.btnCancelTimeSelection).setOnClickListener(v -> timePanel.setVisibility(View.GONE));
+        btnCreateEvent.setOnClickListener(v -> {
+            if (selectedDate == null) {
+                Toast.makeText(this, "Please select a day", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (endMinutes <= startMinutes) {
+                Toast.makeText(this, "End time must be after start time", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String startIso = selectedDate + "T" + formatTime(startMinutes) + ":00";
+            String endIso = selectedDate + "T" + formatTime(endMinutes) + ":00";
+            lookUpTypesAndCreate(startIso, endIso);
+        });
+        updateTimeLabels();
     }
 
-    // ── Backend submission chain ───────────────────────────────────────────────
+    private void adjustStartTime(int deltaMinutes) {
+        startMinutes = clampMinutes(startMinutes + deltaMinutes);
+        if (endMinutes <= startMinutes) {
+            endMinutes = clampMinutes(startMinutes + 60);
+        }
+        updateTimeLabels();
+    }
+
+    private void adjustEndTime(int deltaMinutes) {
+        int candidate = clampMinutes(endMinutes + deltaMinutes);
+        if (candidate <= startMinutes) {
+            Toast.makeText(this, "End time must be after start time", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        endMinutes = candidate;
+        updateTimeLabels();
+    }
+
+    private int clampMinutes(int value) {
+        return Math.max(0, Math.min(value, 23 * 60 + 45));
+    }
+
+    private void updateTimeLabels() {
+        tvStartTime.setText(formatTime(startMinutes));
+        tvEndTime.setText(formatTime(endMinutes));
+    }
+
+    private String formatTime(int minutes) {
+        return String.format("%02d:%02d", minutes / 60, minutes % 60);
+    }
+
+    private String formatDisplayDate(String isoDate) {
+        return parseDateOrToday(isoDate).format(DAY_DISPLAY_FORMAT);
+    }
+
+    private LocalDate parseDateOrToday(String isoDate) {
+        try {
+            return LocalDate.parse(isoDate);
+        } catch (Exception ignored) {
+            return LocalDate.now();
+        }
+    }
 
     private void lookUpTypesAndCreate(String startIso, String endIso) {
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
@@ -253,10 +348,10 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
     }
 
     private void submitEvent(ApiService api, Long typeId, Set<Long> optionIds,
-                              String startIso, String endIso) {
+                             String startIso, String endIso) {
         CreateEventRequest request = new CreateEventRequest();
-        request.title        = eventTitle;
-        request.eventDate    = startIso;
+        request.title = eventTitle;
+        request.eventDate = startIso;
         request.eventEndDate = endIso;
         request.locationName = locationName;
         request.locationType = locationType;
@@ -269,8 +364,8 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
         request.venueWebsite = venueWebsite;
         request.venuePhone = venuePhone;
         request.venueOpeningHours = venueHours;
-        request.eventTypeId  = typeId;
-        request.optionIds    = optionIds;
+        request.eventTypeId = typeId;
+        request.optionIds = optionIds;
 
         api.createEvent(request).enqueue(new Callback<EventResponse>() {
             @Override
@@ -280,18 +375,18 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
                     EventResponse createdEvent = response.body();
                     Toast.makeText(WeatherSurveyResultsActivity.this,
                             "\"" + eventTitle + "\" created!", Toast.LENGTH_SHORT).show();
-                    
-                    // Navigate to vendor selection if event has options
+
                     if (selectedOptions != null && !selectedOptions.isEmpty()) {
                         Intent intent = new Intent(WeatherSurveyResultsActivity.this, VendorSuggestionsActivity.class);
                         String vendorCity = (locationCity != null && !locationCity.isEmpty()) ? locationCity : locationName;
                         intent.putExtra(VendorSuggestionsActivity.EXTRA_CITY, vendorCity);
                         intent.putExtra(VendorSuggestionsActivity.EXTRA_EVENT_ID, createdEvent.id);
                         intent.putExtra(VendorSuggestionsActivity.EXTRA_ALLOW_ADD, true);
+                        intent.putExtra(VendorSuggestionsActivity.EXTRA_RADIUS,
+                                locationRadiusKm > 0 ? locationRadiusKm * 1000 : 5000);
                         intent.putStringArrayListExtra(VendorSuggestionsActivity.EXTRA_OPTIONS, selectedOptions);
                         startActivity(intent);
                     } else {
-                        // No options selected, go back to event list
                         Intent intent = new Intent(WeatherSurveyResultsActivity.this, MainActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -314,8 +409,6 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
             }
         });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void showError(String msg) {
         tvError.setText(msg);

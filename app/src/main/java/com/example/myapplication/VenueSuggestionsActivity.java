@@ -14,6 +14,7 @@ import com.example.myapplication.adapter.VenueAdapter;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.VenueResponse;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class VenueSuggestionsActivity extends BaseActivity {
     private ProgressBar progress;
     private TextView tvNoVenues;
     private RecyclerView recycler;
+    private MaterialButton btnContinueWithoutVenue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,30 +62,12 @@ public class VenueSuggestionsActivity extends BaseActivity {
         progress   = findViewById(R.id.progressVenues);
         tvNoVenues = findViewById(R.id.tvNoVenues);
         recycler   = findViewById(R.id.recyclerVenues);
+        btnContinueWithoutVenue = findViewById(R.id.btnContinueWithoutVenue);
 
-        adapter = new VenueAdapter(venueList, venue -> {
-            // Return the selected venue name back to EventOptionsActivity
-            Intent result = new Intent();
-            result.putExtra(RESULT_VENUE_NAME, venue.name);
-            if (venue.osmId != null) {
-                result.putExtra(RESULT_VENUE_OSM_ID, venue.osmId);
-            }
-            result.putExtra(RESULT_VENUE_ADDRESS, venue.address);
-            if (venue.lat != null) {
-                result.putExtra(RESULT_VENUE_LAT, venue.lat);
-            }
-            if (venue.lon != null) {
-                result.putExtra(RESULT_VENUE_LON, venue.lon);
-            }
-            result.putExtra(RESULT_VENUE_CATEGORY, venue.category);
-            result.putExtra(RESULT_VENUE_WEBSITE, venue.website);
-            result.putExtra(RESULT_VENUE_PHONE, venue.phone);
-            result.putExtra(RESULT_VENUE_HOURS, venue.openingHours);
-            setResult(RESULT_OK, result);
-            finish();
-        });
+        adapter = new VenueAdapter(venueList, this::continueWithVenue);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
+        btnContinueWithoutVenue.setOnClickListener(v -> continueWithVenue(null));
 
         String city         = getIntent().getStringExtra(EXTRA_CITY);
         int    radius       = getIntent().getIntExtra(EXTRA_RADIUS, 5000);
@@ -98,6 +82,34 @@ public class VenueSuggestionsActivity extends BaseActivity {
         }
 
         loadVenues(city, safeRadius, locationType, eventType);
+    }
+
+    private void continueWithVenue(VenueResponse venue) {
+        Intent intent = new Intent(this, TimeframeSelectionActivity.class);
+        intent.putExtra("EVENT_TYPE", getIntent().getStringExtra("EVENT_TYPE"));
+        intent.putExtra("EVENT_TITLE", getIntent().getStringExtra("EVENT_TITLE"));
+        intent.putExtra("LOCATION_CITY", getIntent().getStringExtra("LOCATION_CITY"));
+        intent.putExtra("LOCATION_TYPE", getIntent().getStringExtra("LOCATION_TYPE"));
+        intent.putExtra("LOCATION_RADIUS_KM", getIntent().getIntExtra("LOCATION_RADIUS_KM", 0));
+        intent.putStringArrayListExtra(
+                "SELECTED_OPTIONS",
+                getIntent().getStringArrayListExtra("SELECTED_OPTIONS"));
+
+        String locationName = getIntent().getStringExtra("LOCATION_NAME");
+        if (venue != null && venue.name != null && !venue.name.isEmpty()) {
+            locationName = venue.name;
+            if (venue.osmId != null) intent.putExtra("VENUE_OSM_ID", venue.osmId);
+            intent.putExtra("VENUE_NAME", venue.name);
+            intent.putExtra("VENUE_ADDRESS", venue.address);
+            if (venue.lat != null) intent.putExtra("VENUE_LAT", venue.lat);
+            if (venue.lon != null) intent.putExtra("VENUE_LON", venue.lon);
+            intent.putExtra("VENUE_CATEGORY", venue.category);
+            intent.putExtra("VENUE_WEBSITE", venue.website);
+            intent.putExtra("VENUE_PHONE", venue.phone);
+            intent.putExtra("VENUE_HOURS", venue.openingHours);
+        }
+        intent.putExtra("LOCATION_NAME", locationName);
+        startActivity(intent);
     }
 
     private void loadVenues(String city, int radius,
