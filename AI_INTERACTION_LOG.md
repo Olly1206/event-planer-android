@@ -4419,3 +4419,27 @@ Updated the Android event creation flow so event details/options lead to a dedic
 
 **Verification:**
 Ran Android `./gradlew test` successfully and backend `SPRING_PROFILES_ACTIVE=local ./gradlew test` successfully. Refreshed the stakeholder handoff zip.
+
+---
+
+### [2026-05-03 20:55] Codex
+**User Prompt:**
+"i wanna put this app up on google play store as a maybe even early access app... walk me through it step by step... my account verification is complete... please start on your end"
+
+**AI Action:**
+Prepared the Android project for Google Play release testing. Updated the Play Store application id to `com.oliverloeckler.evengo`, moved the API base URL into Gradle `BuildConfig`, disabled HTTP body logging for release builds, disabled cleartext traffic for release builds, added optional release-signing configuration through a local `keystore.properties` file, added a safe `keystore.properties.example`, ignored keystore files in Git, and added `PLAY_STORE_RELEASE.md` with upload-key and bundle-build instructions.
+
+**Verification:**
+Ran Android `./gradlew test` successfully and `./gradlew bundleRelease` successfully. Confirmed the release manifest uses `com.oliverloeckler.evengo` with `android:usesCleartextTraffic="false"` and that release `BuildConfig` points to the Render backend with HTTP logging disabled. The generated bundle is still unsigned until a real upload key and local `keystore.properties` are created.
+
+---
+
+### [2026-05-03 21:10] Codex
+**User Prompt:**
+"alrifgt lets continue where we left off before the crash"
+
+**AI Action:**
+Continued Google Play release preparation after the session crash. Added backend self-service account deletion through `DELETE /api/users/me`, added public `/privacy` and `/account-deletion` pages for Play Console support links, and updated the Android dashboard with an account menu for privacy/deletion information, account deletion, and logout. Updated release documentation with store-listing, Data safety, privacy-policy, and account-deletion notes.
+
+**Verification:**
+Ran backend `SPRING_PROFILES_ACTIVE=local ./gradlew test` successfully, Android `./gradlew test` successfully, and Android `./gradlew bundleRelease` successfully. Confirmed the release bundle is still unsigned until a real upload key is configured locally.

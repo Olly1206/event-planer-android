@@ -11,6 +11,7 @@ Native Android client for the Event Planner prototype. The app lets users regist
 - Venue suggestions by city, radius, location type, and event type
 - Vendor suggestions by city, radius, and selected event options
 - Weather forecast lookup through the backend
+- Account menu with logout, privacy information, and self-service account deletion
 - XML layouts with Java activities and Retrofit networking
 
 ## Tech Stack
@@ -49,10 +50,10 @@ app/src/main/
 
 ## Backend Connection
 
-The current prototype points at the deployed backend in:
+The backend URL is configured per build type in:
 
 ```text
-app/src/main/java/com/example/myapplication/network/RetrofitClient.java
+app/build.gradle.kts
 ```
 
 Current base URL:
@@ -63,12 +64,17 @@ https://event-planer-backend.onrender.com/
 
 For a local backend, update `BASE_URL` before building:
 
-```java
-// Android emulator talking to backend on this computer
-private static final String BASE_URL = "http://10.0.2.2:8080/";
+```kotlin
+buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+```
 
-// Physical phone on same Wi-Fi as this computer
-private static final String BASE_URL = "http://<computer-lan-ip>:8080/";
+Release builds use HTTPS, disable cleartext traffic, and turn off OkHttp body logging.
+
+The deployed backend also serves the public Play Store support pages:
+
+```text
+https://event-planer-backend.onrender.com/privacy
+https://event-planer-backend.onrender.com/account-deletion
 ```
 
 ## Build And Run
@@ -77,9 +83,20 @@ private static final String BASE_URL = "http://<computer-lan-ip>:8080/";
 ./gradlew test
 ./gradlew assembleDebug
 ./gradlew installDebug
+./gradlew bundleRelease
 ```
 
 You can also open the folder in Android Studio, wait for Gradle sync, select a device, and press Run.
+
+## Play Store Release
+
+The Play Store application ID is:
+
+```text
+com.oliverloeckler.evengo
+```
+
+See `PLAY_STORE_RELEASE.md` for release signing, bundle generation, and upload notes.
 
 ## Useful Demo Flow
 

@@ -38,6 +38,9 @@ public interface ApiService {
     @POST("api/auth/guest")
     Call<GuestAuthResponse> loginAsGuest();
 
+    @DELETE("api/users/me")
+    Call<Void> deleteCurrentUser();
+
     // ── Events ─────────────────────────────────────────────────────────────────
 
     @POST("api/events")

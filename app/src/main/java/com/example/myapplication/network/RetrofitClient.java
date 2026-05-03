@@ -2,6 +2,7 @@ package com.example.myapplication.network;
 
 import android.content.Context;
 
+import com.example.myapplication.BuildConfig;
 import com.example.myapplication.auth.AuthManager;
 
 import java.io.IOException;
@@ -17,13 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    /**
-     * BASE_URL — points to Render production backend
-     * For local development, change to:
-     *   Android Emulator  →  http://10.0.2.2:8080/
-     *   Physical device (same Wi-Fi as dev machine)  →  http://<your-machine-LAN-IP>:8080/
-     */
-    private static final String BASE_URL = "https://event-planer-backend.onrender.com/";  // Render production
+    private static final String BASE_URL = BuildConfig.BASE_URL;
 
     private static Retrofit instance;
 
@@ -35,12 +30,7 @@ public class RetrofitClient {
         if (instance == null) {
             Context appContext = context.getApplicationContext();
 
-            // Logging interceptor — prints every HTTP request and response to Logcat
-            // Filter by tag "OkHttp" in Logcat to see the raw traffic
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-            OkHttpClient client = new OkHttpClient.Builder()
+            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                     .connectTimeout(20, TimeUnit.SECONDS)
                     .readTimeout(45, TimeUnit.SECONDS)
                     .writeTimeout(45, TimeUnit.SECONDS)
@@ -77,9 +67,15 @@ public class RetrofitClient {
                         } catch (SocketTimeoutException timeout) {
                             throw new IOException("Server timed out. The backend may be waking up or responding slowly.", timeout);
                         }
-                    })
-                    .addInterceptor(logging)
-                    .build();
+                    });
+
+            if (BuildConfig.ENABLE_HTTP_LOGGING) {
+                HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+                logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+                clientBuilder.addInterceptor(logging);
+            }
+
+            OkHttpClient client = clientBuilder.build();
 
             instance = new Retrofit.Builder()
                     .baseUrl(BASE_URL)

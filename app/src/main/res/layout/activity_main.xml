@@ -38,6 +38,17 @@
                 android:textColor="@color/white" />
 
             <ImageButton
+                android:id="@+id/btnAccount"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_manage"
+                android:contentDescription="Account options"
+                android:scaleType="centerInside"
+                app:tint="@color/white" />
+
+            <ImageButton
                 android:id="@+id/btnLogout"
                 android:layout_width="40dp"
                 android:layout_height="40dp"

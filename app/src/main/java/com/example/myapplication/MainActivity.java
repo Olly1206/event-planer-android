@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +22,7 @@ import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.EventResponse;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -118,15 +120,86 @@ public class MainActivity extends BaseActivity {
                 startActivity(new Intent(this, SelectEventTypeActivity.class))
         );
 
+        ImageButton btnAccount = findViewById(R.id.btnAccount);
+        btnAccount.setOnClickListener(v -> showAccountMenu());
+
         // Logout button in header
         ImageButton btnLogout = findViewById(R.id.btnLogout);
-        btnLogout.setOnClickListener(v -> {
-            AuthManager.getInstance(this).clearSession();
-            RetrofitClient.reset();
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        btnLogout.setOnClickListener(v -> logoutToLogin());
+    }
+
+    private void showAccountMenu() {
+        CharSequence[] actions = {
+                "Privacy and deletion info",
+                "Delete account",
+                "Logout"
+        };
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Account")
+                .setItems(actions, (dialog, which) -> {
+                    if (which == 0) {
+                        openLegalInfo();
+                    } else if (which == 1) {
+                        confirmDeleteAccount();
+                    } else if (which == 2) {
+                        logoutToLogin();
+                    }
+                })
+                .show();
+    }
+
+    private void openLegalInfo() {
+        String url = RetrofitClient.getBaseUrl() + "privacy";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        try {
             startActivity(intent);
+        } catch (Exception ignored) {
+            Toast.makeText(this, "No browser app available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void confirmDeleteAccount() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Delete account?")
+                .setMessage("This permanently deletes your account, events you created, and your event participation records.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete", (dialog, which) -> deleteAccount())
+                .show();
+    }
+
+    private void deleteAccount() {
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.deleteCurrentUser().enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(MainActivity.this, "Account deleted", Toast.LENGTH_SHORT).show();
+                    logoutToLogin();
+                } else if (response.code() == 401 || response.code() == 403) {
+                    Toast.makeText(MainActivity.this,
+                            "Session expired — please log in again", Toast.LENGTH_SHORT).show();
+                    redirectToLogin();
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "Could not delete account (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                showNetworkFailure(t);
+            }
         });
+    }
+
+    private void logoutToLogin() {
+        AuthManager.getInstance(this).clearSession();
+        RetrofitClient.reset();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -375,10 +448,7 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == 1) {
-            AuthManager.getInstance(this).clearSession();
-            RetrofitClient.reset();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            logoutToLogin();
             return true;
         }
         return super.onOptionsItemSelected(item);
