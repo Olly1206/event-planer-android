@@ -2546,3 +2546,100 @@ Next steps:
 ```
 
 ---
+
+### [2026-04-29 20:51] Intensive 403 Debugging & Thymeleaf Error Fix
+
+**User Prompt 85**:
+"alright now were back beeing not authorized. please look into this problem a little deeper and try solving it for me intensivly"
+
+**AI Actions 85**:
+1. Deep investigation of 403 authorization issue on invite pages
+2. Root cause identified: `invite.html` had Thymeleaf parsing error with apostrophe in string
+3. Fixed template: Changed `'You're invited: ' + ${event.title}` to `|You're invited: ${event.title}|` (literal substitution syntax)
+4. Added detailed logging throughout invite flow:
+   - InvitePageController: Logs incoming /s/{shortCode} and /invite/{token} requests + exceptions
+   - ShortCodeService: Logs short code resolution with mapped token
+   - EventService: Logs resolveShortCode() and previewByToken() calls + resolved event IDs
+5. Created local H2 profile (application-local.properties) to allow local development/testing without MySQL
+
+**Issue Root Cause (Found)**:
+```
+Thymeleaf template parse error in invite.html line 6:
+"Could not parse as expression: \"'You're invited: ' + ${event.title}\" 
+(template: "invite" - line 6, col 12)"
+```
+The apostrophe in `'You're` was breaking Thymeleaf string literal parsing, causing template processing to fail and returning error HTML (403 interpretation issue).
+
+**Fixes Applied**:
+1. **invite.html** (line 6):
+   - OLD: `<title th:text="'You're invited: ' + ${event.title}">Event Invite</title>`
+   - NEW: `<title th:text="|You're invited: ${event.title}|">Event Invite</title>`
+   - Why: Thymeleaf literal substitution `|...|` safely handles apostrophes without quoting issues
+
+2. **Logging Added** (for future debugging):
+   - InvitePageController: Added logger for short-code and token requests
+   - ShortCodeService: Logs resolution mapping
+   - EventService: Logs preview and short code resolution
+   - Allows tracing 403 issues by examining request flow in logs
+
+3. **Local Development** (application-local.properties):
+   - Enables running app with in-memory H2 database (no MySQL dependency)
+   - Supports local debugging without staging environment
+
+**Git Commit**:
+- Backend commit af0bbe7: "Add detailed logging to invite flow and fix Thymeleaf apostrophe; add local H2 profile"
+- Files changed: InvitePageController.java, EventService.java, ShortCodeService.java, invite.html, application-local.properties
+- Pushed to remote repo
+
+**Deployment Strategy**:
+- Backend pushed to GitHub → Render auto-deploys
+- Once live: Test on phone app → Reproduce issue → Check Render logs for:
+  - InvitePageController: "Short-code invite requested: {code}"
+  - ShortCodeService: "Short code lookup: {code} -> token={token}"
+  - EventService: "Event preview requested for token={token}"
+  - Any SecurityException or error stack traces
+
+**Next Steps**:
+1. Deploy to Render (auto-triggered by git push)
+2. Test on phone: Click shared short-code link again
+3. Check Render logs for new logging statements to identify where 403 occurs
+4. If application-level SecurityException: Fix authorization logic
+5. If WAF blocks: Implement alternative path (/i/ or subdomain)
+
+---
+
+### [2026-04-29 21:00] Boot Failure & Local Development Setup
+
+**User Prompt 86**:
+"Task :bootRun FAILED"
+
+**Issue Found**:
+Local `./gradlew bootRun` failed because Spring tried to connect to MySQL (defined in application.properties) but MySQL is not available locally.
+
+**Solution Provided**:
+- Created application-local.properties with H2 in-memory database
+- Allows local testing without MySQL dependency
+- Command to run locally: `SPRING_PROFILES_ACTIVE=local ./gradlew bootRun`
+
+**User Decision**:
+Chose to skip local testing and deploy directly to Render (which has MySQL configured in environment).
+
+---
+
+### [2026-04-29 21:10] Git Push & Log Update
+
+**User Prompt 87**:
+"alright push to git and append missing chat history to the log file please"
+
+**AI Actions 87**:
+1. Committed backend changes: af0bbe7 (Thymeleaf fix + logging + local profile)
+2. Pushed to remote: github.com/Olly1206/event-planer-backend.git
+3. Appended missing chat history to this log file
+
+**Session Summary**:
+- Fixed critical Thymeleaf template parsing error that was causing invite pages to fail rendering
+- Added comprehensive logging to trace invite flow and identify authorization issues
+- Prepared local development environment (H2 profile)
+- All changes pushed to production deployment (Render)
+- Ready for phone testing to validate fix
+

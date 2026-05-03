@@ -64,13 +64,18 @@ public class EditEventActivity extends BaseActivity {
         String title = getIntent().getStringExtra("title");
         String desc  = getIntent().getStringExtra("description");
         String loc   = getIntent().getStringExtra("locationName");
+        String venueName = getIntent().getStringExtra("venueName");
         String status = getIntent().getStringExtra("status");
         String visibility = getIntent().getStringExtra("visibility");
         int maxP = getIntent().getIntExtra("maxParticipants", 0);
 
         if (title != null) etTitle.setText(title);
         if (desc  != null) etDescription.setText(desc);
-        if (loc   != null) etLocation.setText(loc);
+        if (venueName != null) {
+            etLocation.setText(venueName);
+        } else if (loc != null) {
+            etLocation.setText(loc);
+        }
         if (maxP > 0) etMaxParticipants.setText(String.valueOf(maxP));
 
         if (status != null) {

@@ -59,6 +59,7 @@ public class EventOptionsActivity extends BaseActivity {
     private NominatimService nominatimService;
     private Button btnBrowseVenues;
     private ActivityResultLauncher<Intent> venueLauncher;
+    private VenueSelection selectedVenue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +70,30 @@ public class EventOptionsActivity extends BaseActivity {
         venueLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    // Handle the result from VenueSuggestionsActivity if needed
+                    if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                        return;
+                    }
+                    Intent data = result.getData();
+                    VenueSelection venue = new VenueSelection();
+                    venue.name = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_NAME);
+                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_OSM_ID)) {
+                        venue.osmId = data.getLongExtra(VenueSuggestionsActivity.RESULT_VENUE_OSM_ID, 0);
+                    }
+                    venue.address = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_ADDRESS);
+                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_LAT)) {
+                        venue.lat = data.getDoubleExtra(VenueSuggestionsActivity.RESULT_VENUE_LAT, 0);
+                    }
+                    if (data.hasExtra(VenueSuggestionsActivity.RESULT_VENUE_LON)) {
+                        venue.lon = data.getDoubleExtra(VenueSuggestionsActivity.RESULT_VENUE_LON, 0);
+                    }
+                    venue.category = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_CATEGORY);
+                    venue.website = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_WEBSITE);
+                    venue.phone = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_PHONE);
+                    venue.openingHours = data.getStringExtra(VenueSuggestionsActivity.RESULT_VENUE_HOURS);
+                    if (venue.name != null && !venue.name.isEmpty()) {
+                        selectedVenue = venue;
+                        etLocation.setText(venue.name);
+                    }
                 }
         );
 
@@ -216,6 +240,10 @@ public class EventOptionsActivity extends BaseActivity {
                     ? selectedCityDisplay + " (" + radiusKm + " km radius)"
                     : selectedCityDisplay;
 
+            if (selectedVenue != null && selectedVenue.name != null) {
+                locationName = selectedVenue.name;
+            }
+
             ArrayList<String> selectedOptions = new ArrayList<>();
             if (cbCatering.isChecked())      selectedOptions.add("Catering");
             if (cbMusic.isChecked())         selectedOptions.add("Live Music");
@@ -231,8 +259,31 @@ public class EventOptionsActivity extends BaseActivity {
             intent.putExtra("LOCATION_TYPE",      locationType);
             intent.putExtra("LOCATION_RADIUS_KM", radiusKm);
             intent.putStringArrayListExtra("SELECTED_OPTIONS", selectedOptions);
+            if (selectedVenue != null) {
+                if (selectedVenue.osmId != null) intent.putExtra("VENUE_OSM_ID", selectedVenue.osmId);
+                intent.putExtra("VENUE_NAME", selectedVenue.name);
+                intent.putExtra("VENUE_ADDRESS", selectedVenue.address);
+                if (selectedVenue.lat != null) intent.putExtra("VENUE_LAT", selectedVenue.lat);
+                if (selectedVenue.lon != null) intent.putExtra("VENUE_LON", selectedVenue.lon);
+                intent.putExtra("VENUE_CATEGORY", selectedVenue.category);
+                intent.putExtra("VENUE_WEBSITE", selectedVenue.website);
+                intent.putExtra("VENUE_PHONE", selectedVenue.phone);
+                intent.putExtra("VENUE_HOURS", selectedVenue.openingHours);
+            }
             startActivity(intent);
         });
+    }
+
+    private static class VenueSelection {
+        Long osmId;
+        String name;
+        String address;
+        Double lat;
+        Double lon;
+        String category;
+        String website;
+        String phone;
+        String openingHours;
     }
 
     private void fetchCitySuggestions(String query) {

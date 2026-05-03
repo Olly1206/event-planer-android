@@ -36,6 +36,14 @@ public class VenueSuggestionsActivity extends BaseActivity {
     public static final String EXTRA_LOCATION_TYPE = "venue_location_type";
     public static final String EXTRA_EVENT_TYPE    = "venue_event_type";
     public static final String RESULT_VENUE_NAME   = "selected_venue_name";
+    public static final String RESULT_VENUE_OSM_ID = "selected_venue_osm_id";
+    public static final String RESULT_VENUE_ADDRESS = "selected_venue_address";
+    public static final String RESULT_VENUE_LAT = "selected_venue_lat";
+    public static final String RESULT_VENUE_LON = "selected_venue_lon";
+    public static final String RESULT_VENUE_CATEGORY = "selected_venue_category";
+    public static final String RESULT_VENUE_WEBSITE = "selected_venue_website";
+    public static final String RESULT_VENUE_PHONE = "selected_venue_phone";
+    public static final String RESULT_VENUE_HOURS = "selected_venue_hours";
     private static final int MAX_RADIUS_METERS = 10_000;
 
     private final List<VenueResponse> venueList = new ArrayList<>();
@@ -57,6 +65,20 @@ public class VenueSuggestionsActivity extends BaseActivity {
             // Return the selected venue name back to EventOptionsActivity
             Intent result = new Intent();
             result.putExtra(RESULT_VENUE_NAME, venue.name);
+            if (venue.osmId != null) {
+                result.putExtra(RESULT_VENUE_OSM_ID, venue.osmId);
+            }
+            result.putExtra(RESULT_VENUE_ADDRESS, venue.address);
+            if (venue.lat != null) {
+                result.putExtra(RESULT_VENUE_LAT, venue.lat);
+            }
+            if (venue.lon != null) {
+                result.putExtra(RESULT_VENUE_LON, venue.lon);
+            }
+            result.putExtra(RESULT_VENUE_CATEGORY, venue.category);
+            result.putExtra(RESULT_VENUE_WEBSITE, venue.website);
+            result.putExtra(RESULT_VENUE_PHONE, venue.phone);
+            result.putExtra(RESULT_VENUE_HOURS, venue.openingHours);
             setResult(RESULT_OK, result);
             finish();
         });

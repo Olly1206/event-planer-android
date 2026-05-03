@@ -11,6 +11,15 @@ public class EventResponse {
     public String eventEndDate;      // ISO-8601 string — null if open-ended
     public String locationName;
     public String locationType;      // "INDOOR", "OUTDOOR", "BOTH"
+    public Long venueOsmId;
+    public String venueName;
+    public String venueAddress;
+    public Double venueLat;
+    public Double venueLon;
+    public String venueCategory;
+    public String venueWebsite;
+    public String venuePhone;
+    public String venueOpeningHours;
     public String status;            // "DRAFT", "PLANNED", "ONGOING", "COMPLETED", "CANCELLED"
     public Integer maxParticipants;
     public int currentParticipantCount;

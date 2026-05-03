@@ -127,8 +127,12 @@ public class EventDetailActivity extends BaseActivity {
         tvOrganiser.setText("Organiser: " + event.organiserUsername);
         tvDate.setText("Date: " + event.eventDate
                 + (event.eventEndDate != null ? " → " + event.eventEndDate : ""));
-        tvLocation.setText("Location: " + (event.locationName != null ? event.locationName : "—")
-                + " (" + event.locationType + ")");
+        String locationLabel = event.venueName != null ? event.venueName
+            : event.locationName != null ? event.locationName
+            : "—";
+        String locationDetails = event.venueAddress != null ? "\n" + event.venueAddress : "";
+        tvLocation.setText("Location: " + locationLabel + locationDetails
+            + " (" + event.locationType + ")");
         tvType.setText("Type: " + (event.eventTypeName != null ? event.eventTypeName : "—"));
         tvStatus.setText("Status: " + event.status);
 
@@ -188,6 +192,7 @@ public class EventDetailActivity extends BaseActivity {
                 intent.putExtra("eventDate", event.eventDate);
                 intent.putExtra("eventEndDate", event.eventEndDate);
                 intent.putExtra("locationName", event.locationName);
+                intent.putExtra("venueName", event.venueName);
                 intent.putExtra("locationType", event.locationType);
                 intent.putExtra("visibility", event.visibility);
                 intent.putExtra("status", event.status);

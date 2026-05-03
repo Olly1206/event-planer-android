@@ -45,6 +45,15 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
     private String eventType, eventTitle, locationName, locationCity, locationType;
     private ArrayList<String> selectedOptions;
     private String startDate, endDate;
+    private Long venueOsmId;
+    private String venueName;
+    private String venueAddress;
+    private Double venueLat;
+    private Double venueLon;
+    private String venueCategory;
+    private String venueWebsite;
+    private String venuePhone;
+    private String venueHours;
 
     private LinearLayout llDayContainer;
     private ProgressBar progressBar;
@@ -65,6 +74,15 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
         selectedOptions = getIntent().getStringArrayListExtra("SELECTED_OPTIONS");
         startDate       = getIntent().getStringExtra("START_DATE");
         endDate         = getIntent().getStringExtra("END_DATE");
+        if (getIntent().hasExtra("VENUE_OSM_ID")) venueOsmId = getIntent().getLongExtra("VENUE_OSM_ID", 0);
+        venueName = getIntent().getStringExtra("VENUE_NAME");
+        venueAddress = getIntent().getStringExtra("VENUE_ADDRESS");
+        if (getIntent().hasExtra("VENUE_LAT")) venueLat = getIntent().getDoubleExtra("VENUE_LAT", 0);
+        if (getIntent().hasExtra("VENUE_LON")) venueLon = getIntent().getDoubleExtra("VENUE_LON", 0);
+        venueCategory = getIntent().getStringExtra("VENUE_CATEGORY");
+        venueWebsite = getIntent().getStringExtra("VENUE_WEBSITE");
+        venuePhone = getIntent().getStringExtra("VENUE_PHONE");
+        venueHours = getIntent().getStringExtra("VENUE_HOURS");
         if (selectedOptions == null) selectedOptions = new ArrayList<>();
 
         llDayContainer = findViewById(R.id.llDayContainer);
@@ -242,6 +260,15 @@ public class WeatherSurveyResultsActivity extends BaseActivity {
         request.eventEndDate = endIso;
         request.locationName = locationName;
         request.locationType = locationType;
+        request.venueOsmId = venueOsmId;
+        request.venueName = venueName;
+        request.venueAddress = venueAddress;
+        request.venueLat = venueLat;
+        request.venueLon = venueLon;
+        request.venueCategory = venueCategory;
+        request.venueWebsite = venueWebsite;
+        request.venuePhone = venuePhone;
+        request.venueOpeningHours = venueHours;
         request.eventTypeId  = typeId;
         request.optionIds    = optionIds;
 

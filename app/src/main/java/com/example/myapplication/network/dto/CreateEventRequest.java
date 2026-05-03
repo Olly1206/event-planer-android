@@ -16,6 +16,15 @@ public class CreateEventRequest {
     public String locationName;
     /** "INDOOR", "OUTDOOR", or "BOTH" */
     public String locationType;
+    public Long venueOsmId;
+    public String venueName;
+    public String venueAddress;
+    public Double venueLat;
+    public Double venueLon;
+    public String venueCategory;
+    public String venueWebsite;
+    public String venuePhone;
+    public String venueOpeningHours;
     public Integer maxParticipants;
     /** Database ID of the EventType (e.g. Seminar = 1) */
     public Long eventTypeId;

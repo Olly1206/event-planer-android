@@ -31,6 +31,15 @@ public class TimeframeSelectionActivity extends BaseActivity {
     private String eventType, eventTitle, locationName, locationCity, locationType;
     private int locationRadiusKm;
     private ArrayList<String> selectedOptions;
+    private Long venueOsmId;
+    private String venueName;
+    private String venueAddress;
+    private Double venueLat;
+    private Double venueLon;
+    private String venueCategory;
+    private String venueWebsite;
+    private String venuePhone;
+    private String venueHours;
 
     private Button btnStartDate, btnEndDate, btnNext;
     private TextView tvSummary;
@@ -47,6 +56,15 @@ public class TimeframeSelectionActivity extends BaseActivity {
         locationType     = getIntent().getStringExtra("LOCATION_TYPE");
         locationRadiusKm = getIntent().getIntExtra("LOCATION_RADIUS_KM", 0);
         selectedOptions  = getIntent().getStringArrayListExtra("SELECTED_OPTIONS");
+        if (getIntent().hasExtra("VENUE_OSM_ID")) venueOsmId = getIntent().getLongExtra("VENUE_OSM_ID", 0);
+        venueName = getIntent().getStringExtra("VENUE_NAME");
+        venueAddress = getIntent().getStringExtra("VENUE_ADDRESS");
+        if (getIntent().hasExtra("VENUE_LAT")) venueLat = getIntent().getDoubleExtra("VENUE_LAT", 0);
+        if (getIntent().hasExtra("VENUE_LON")) venueLon = getIntent().getDoubleExtra("VENUE_LON", 0);
+        venueCategory = getIntent().getStringExtra("VENUE_CATEGORY");
+        venueWebsite = getIntent().getStringExtra("VENUE_WEBSITE");
+        venuePhone = getIntent().getStringExtra("VENUE_PHONE");
+        venueHours = getIntent().getStringExtra("VENUE_HOURS");
         if (selectedOptions == null) selectedOptions = new ArrayList<>();
 
         btnStartDate = findViewById(R.id.btnStartDate);
@@ -87,6 +105,15 @@ public class TimeframeSelectionActivity extends BaseActivity {
             intent.putExtra("LOCATION_TYPE",       locationType);
             intent.putExtra("LOCATION_RADIUS_KM",  locationRadiusKm);
             intent.putStringArrayListExtra("SELECTED_OPTIONS", selectedOptions);
+            if (venueOsmId != null) intent.putExtra("VENUE_OSM_ID", venueOsmId);
+            intent.putExtra("VENUE_NAME", venueName);
+            intent.putExtra("VENUE_ADDRESS", venueAddress);
+            if (venueLat != null) intent.putExtra("VENUE_LAT", venueLat);
+            if (venueLon != null) intent.putExtra("VENUE_LON", venueLon);
+            intent.putExtra("VENUE_CATEGORY", venueCategory);
+            intent.putExtra("VENUE_WEBSITE", venueWebsite);
+            intent.putExtra("VENUE_PHONE", venuePhone);
+            intent.putExtra("VENUE_HOURS", venueHours);
             intent.putExtra("START_DATE",           startIso);
             intent.putExtra("END_DATE",             endIso);
             startActivity(intent);

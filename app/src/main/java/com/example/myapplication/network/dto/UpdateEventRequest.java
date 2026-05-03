@@ -10,6 +10,15 @@ public class UpdateEventRequest {
     public String eventEndDate;
     public String locationName;
     public String locationType;
+    public Long venueOsmId;
+    public String venueName;
+    public String venueAddress;
+    public Double venueLat;
+    public Double venueLon;
+    public String venueCategory;
+    public String venueWebsite;
+    public String venuePhone;
+    public String venueOpeningHours;
     public String visibility;
     public String status;
     public Integer maxParticipants;

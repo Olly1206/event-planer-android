@@ -77,9 +77,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             holder.tvDate.setText("📅 No date set");
         }
 
-        holder.tvLocation.setText(event.locationName != null
-                ? "📍 " + event.locationName
-                : "📍 No location");
+        String locationLabel = event.venueName != null ? event.venueName
+            : event.locationName != null ? event.locationName
+            : "No location";
+        String locationDetail = event.venueAddress != null && !event.venueAddress.isEmpty()
+            ? "\n" + event.venueAddress
+            : "";
+        holder.tvLocation.setText("📍 " + locationLabel + locationDetail);
 
         holder.tvParticipants.setText("👥 " + event.currentParticipantCount
                 + (event.maxParticipants != null ? "/" + event.maxParticipants : ""));
