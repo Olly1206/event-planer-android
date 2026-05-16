@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,7 +42,8 @@ public class EventDetailActivity extends BaseActivity {
     private TextView tvTitle, tvOrganiser, tvDate, tvLocation, tvType,
                      tvStatus, tvParticipants, tvOptions, tvDescription, tvNoSelectedVendors;
     private MaterialButton btnShareInvite, btnEditEvent, btnDeleteEvent,
-                           btnLeaveEvent, btnVendorSuggestions;
+                           btnLeaveEvent, btnVendorSuggestions, btnShareCalendar,
+                           btnExportParticipants;
     private RecyclerView recyclerSelectedVendors;
     private final List<VendorResponse> selectedVendors = new ArrayList<>();
     private VendorAdapter selectedVendorAdapter;
@@ -66,6 +68,8 @@ public class EventDetailActivity extends BaseActivity {
         btnDeleteEvent = findViewById(R.id.btnDeleteEvent);
         btnLeaveEvent  = findViewById(R.id.btnLeaveEvent);
         btnVendorSuggestions = findViewById(R.id.btnVendorSuggestions);
+        btnShareCalendar = findViewById(R.id.btnShareCalendar);
+        btnExportParticipants = findViewById(R.id.btnExportParticipants);
         tvNoSelectedVendors = findViewById(R.id.tvNoSelectedVendors);
         recyclerSelectedVendors = findViewById(R.id.recyclerSelectedVendors);
 
@@ -181,9 +185,13 @@ public class EventDetailActivity extends BaseActivity {
             btnShareInvite.setVisibility(View.GONE);
         }
 
+        btnShareCalendar.setOnClickListener(v -> shareEventCalendar(event.id));
+
         // Edit button — organiser or admin
         if (canManage) {
             btnEditEvent.setVisibility(View.VISIBLE);
+            btnExportParticipants.setVisibility(View.VISIBLE);
+            btnExportParticipants.setOnClickListener(v -> shareParticipantCsv(event.id));
             btnEditEvent.setOnClickListener(v -> {
                 Intent intent = new Intent(this, EditEventActivity.class);
                 intent.putExtra("eventId", eventId);
@@ -250,12 +258,18 @@ public class EventDetailActivity extends BaseActivity {
         if (canManage) {
             btnDeleteEvent.setVisibility(View.VISIBLE);
             btnDeleteEvent.setOnClickListener(v -> confirmDelete());
+        } else {
+            btnDeleteEvent.setVisibility(View.GONE);
+            btnEditEvent.setVisibility(View.GONE);
+            btnExportParticipants.setVisibility(View.GONE);
         }
 
         // Leave button — participant who is NOT the organiser
         if (!isOrganiser) {
             btnLeaveEvent.setVisibility(View.VISIBLE);
             btnLeaveEvent.setOnClickListener(v -> confirmLeave());
+        } else {
+            btnLeaveEvent.setVisibility(View.GONE);
         }
     }
 
@@ -354,5 +368,64 @@ public class EventDetailActivity extends BaseActivity {
                         "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void shareEventCalendar(Long eventId) {
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.exportEventCalendar(eventId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    shareResponseBody(response.body(), "text/calendar", "event-" + eventId + ".ics",
+                            "Share calendar file via");
+                } else {
+                    Toast.makeText(EventDetailActivity.this,
+                            "Could not export calendar (code " + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(EventDetailActivity.this,
+                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void shareParticipantCsv(Long eventId) {
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.exportParticipantsCsv(eventId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    shareResponseBody(response.body(), "text/csv", "event-" + eventId + "-participants.csv",
+                            "Share participant CSV via");
+                } else {
+                    Toast.makeText(EventDetailActivity.this,
+                            "Could not export participants (code " + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(EventDetailActivity.this,
+                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void shareResponseBody(ResponseBody body, String mimeType, String fileName, String chooserTitle) {
+        try {
+            String content = body.string();
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType(mimeType);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, content);
+            startActivity(Intent.createChooser(shareIntent, chooserTitle));
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not prepare export", Toast.LENGTH_SHORT).show();
+        }
     }
 }

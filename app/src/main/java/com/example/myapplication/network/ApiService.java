@@ -2,6 +2,8 @@ package com.example.myapplication.network;
 
 import com.example.myapplication.network.dto.AuthResponse;
 import com.example.myapplication.network.dto.CreateEventRequest;
+import com.example.myapplication.network.dto.EventDashboardResponse;
+import com.example.myapplication.network.dto.EventParticipantResponse;
 import com.example.myapplication.network.dto.EventResponse;
 import com.example.myapplication.network.dto.GuestAuthResponse;
 import com.example.myapplication.network.dto.LoginRequest;
@@ -16,6 +18,7 @@ import com.example.myapplication.network.dto.WeatherData;
 
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -55,8 +58,23 @@ public interface ApiService {
     @GET("api/events/search")
     Call<List<EventResponse>> searchEvents(@Query("keyword") String keyword);
 
+    @GET("api/events/filter")
+    Call<List<EventResponse>> filterEvents(
+            @Query("keyword") String keyword,
+            @Query("city") String city,
+            @Query("eventTypeId") Long eventTypeId,
+            @Query("organiserId") Long organiserId,
+            @Query("from") String from,
+            @Query("to") String to);
+
     @GET("api/events/organiser/{organiserId}")
     Call<List<EventResponse>> getMyEvents(@Path("organiserId") Long organiserId);
+
+    @GET("api/events/organiser/{organiserId}/dashboard")
+    Call<EventDashboardResponse> getOrganiserDashboard(@Path("organiserId") Long organiserId);
+
+    @GET("api/events/organiser/{organiserId}/calendar.ics")
+    Call<ResponseBody> exportOrganiserCalendar(@Path("organiserId") Long organiserId);
 
     @GET("api/events/my")
     Call<List<EventResponse>> getCreatedEvents();
@@ -72,6 +90,15 @@ public interface ApiService {
 
     @DELETE("api/events/{id}/leave")
     Call<Void> leaveEvent(@Path("id") Long id);
+
+    @GET("api/events/{id}/participants")
+    Call<List<EventParticipantResponse>> getParticipants(@Path("id") Long id);
+
+    @GET("api/events/{id}/participants.csv")
+    Call<ResponseBody> exportParticipantsCsv(@Path("id") Long id);
+
+    @GET("api/events/{id}/calendar.ics")
+    Call<ResponseBody> exportEventCalendar(@Path("id") Long id);
 
     @POST("api/events/{id}/vendors")
     Call<VendorResponse> addVendorToEvent(@Path("id") Long id, @Body SaveEventVendorRequest request);
@@ -108,6 +135,9 @@ public interface ApiService {
     /** All events the current user has joined as a participant */
     @GET("api/events/joined")
     Call<List<EventResponse>> getJoinedEvents();
+
+    @GET("api/events/joined/calendar.ics")
+    Call<ResponseBody> exportJoinedCalendar();
 
     // ── Venues ──────────────────────────────────────────────────────────────────
 

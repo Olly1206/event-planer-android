@@ -216,6 +216,25 @@
                 android:textColor="@color/white"
                 android:visibility="gone" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnShareCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Share Calendar File"
+                android:background="@drawable/bg_button_primary"
+                android:textColor="@color/white"
+                android:layout_marginTop="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExportParticipants"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Share Participant CSV"
+                android:background="@drawable/bg_button_primary"
+                android:textColor="@color/white"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+
             <!-- Edit event button (organiser/admin only) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditEvent"
