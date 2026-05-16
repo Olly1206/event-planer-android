@@ -62,6 +62,10 @@
             android:exported="false"
             android:label="Event Details" />
         <activity
+            android:name=".OrganizerDashboardActivity"
+            android:exported="false"
+            android:label="Organizer Dashboard" />
+        <activity
             android:name=".VenueSuggestionsActivity"
             android:exported="false"
             android:label="Venue Suggestions" />

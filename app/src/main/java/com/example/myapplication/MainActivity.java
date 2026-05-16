@@ -93,6 +93,10 @@ public class MainActivity extends BaseActivity {
                     searchInputLayout.setVisibility(View.GONE);
                     adapter.setJoinListener(null);
                     loadJoinedEvents();
+                } else if (checkedId == R.id.chipFollowed) {
+                    searchInputLayout.setVisibility(View.GONE);
+                    adapter.setJoinListener(this::joinDiscoverEvent);
+                    loadSubscribedEvents();
                 } else if (checkedId == R.id.chipDiscover) {
                     searchInputLayout.setVisibility(View.VISIBLE);
                     adapter.setJoinListener(this::joinDiscoverEvent);
@@ -130,6 +134,7 @@ public class MainActivity extends BaseActivity {
 
     private void showAccountMenu() {
         CharSequence[] actions = {
+                "Organizer dashboard",
                 "Privacy and deletion info",
                 "Delete account",
                 "Logout"
@@ -139,10 +144,12 @@ public class MainActivity extends BaseActivity {
                 .setTitle("Account")
                 .setItems(actions, (dialog, which) -> {
                     if (which == 0) {
-                        openLegalInfo();
+                        startActivity(new Intent(this, OrganizerDashboardActivity.class));
                     } else if (which == 1) {
-                        confirmDeleteAccount();
+                        openLegalInfo();
                     } else if (which == 2) {
+                        confirmDeleteAccount();
+                    } else if (which == 3) {
                         logoutToLogin();
                     }
                 })
@@ -214,6 +221,9 @@ public class MainActivity extends BaseActivity {
         if (checkedId == R.id.chipJoined) {
             adapter.setJoinListener(null);
             loadJoinedEvents();
+        } else if (checkedId == R.id.chipFollowed) {
+            adapter.setJoinListener(this::joinDiscoverEvent);
+            loadSubscribedEvents();
         } else if (checkedId == R.id.chipDiscover) {
             adapter.setJoinListener(this::joinDiscoverEvent);
             loadAllPublicEvents();
@@ -322,10 +332,41 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    private void loadSubscribedEvents() {
+        showLoadingState("Loading followed organisers…");
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        api.getSubscribedEvents().enqueue(new Callback<List<EventResponse>>() {
+            @Override
+            public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    eventList.clear();
+                    eventList.addAll(response.body());
+                    adapter.notifyDataSetChanged();
+                    hideLoadingState();
+                    updateUI();
+                } else {
+                    hideLoadingState();
+                    if (response.code() == 401 || response.code() == 403) {
+                        redirectToLogin();
+                        return;
+                    }
+                    Toast.makeText(MainActivity.this,
+                            "Failed to load followed events (code " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<EventResponse>> call, Throwable t) {
+                hideLoadingState();
+                showNetworkFailure(t);
+            }
+        });
+    }
+
     private void searchEvents(String keyword) {
         showLoadingState("Searching public events…");
         ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
-        api.searchEvents(keyword).enqueue(new Callback<List<EventResponse>>() {
+        api.filterEvents(keyword, null, null, null, null, null).enqueue(new Callback<List<EventResponse>>() {
             @Override
             public void onResponse(Call<List<EventResponse>> call, Response<List<EventResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {

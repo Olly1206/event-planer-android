@@ -14,7 +14,9 @@ import com.example.myapplication.auth.AuthManager;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.RetrofitClient;
 import com.example.myapplication.network.dto.EventResponse;
+import com.example.myapplication.network.dto.OrganizerSubscriptionResponse;
 import com.example.myapplication.network.dto.ShortCodeResponse;
+import com.example.myapplication.network.dto.SubscriptionPreferenceRequest;
 import com.example.myapplication.network.dto.VendorResponse;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -43,7 +45,7 @@ public class EventDetailActivity extends BaseActivity {
                      tvStatus, tvParticipants, tvOptions, tvDescription, tvNoSelectedVendors;
     private MaterialButton btnShareInvite, btnEditEvent, btnDeleteEvent,
                            btnLeaveEvent, btnVendorSuggestions, btnShareCalendar,
-                           btnExportParticipants;
+                           btnExportParticipants, btnFollowOrganiser;
     private RecyclerView recyclerSelectedVendors;
     private final List<VendorResponse> selectedVendors = new ArrayList<>();
     private VendorAdapter selectedVendorAdapter;
@@ -70,6 +72,7 @@ public class EventDetailActivity extends BaseActivity {
         btnVendorSuggestions = findViewById(R.id.btnVendorSuggestions);
         btnShareCalendar = findViewById(R.id.btnShareCalendar);
         btnExportParticipants = findViewById(R.id.btnExportParticipants);
+        btnFollowOrganiser = findViewById(R.id.btnFollowOrganiser);
         tvNoSelectedVendors = findViewById(R.id.tvNoSelectedVendors);
         recyclerSelectedVendors = findViewById(R.id.recyclerSelectedVendors);
 
@@ -186,6 +189,14 @@ public class EventDetailActivity extends BaseActivity {
         }
 
         btnShareCalendar.setOnClickListener(v -> shareEventCalendar(event.id));
+
+        if (!isOrganiser && event.organiserId != null) {
+            btnFollowOrganiser.setVisibility(View.VISIBLE);
+            btnFollowOrganiser.setText("Follow " + event.organiserUsername);
+            btnFollowOrganiser.setOnClickListener(v -> followOrganiser(event.organiserId));
+        } else {
+            btnFollowOrganiser.setVisibility(View.GONE);
+        }
 
         // Edit button — organiser or admin
         if (canManage) {
@@ -364,6 +375,41 @@ public class EventDetailActivity extends BaseActivity {
 
             @Override
             public void onFailure(Call<ShortCodeResponse> call, Throwable t) {
+                Toast.makeText(EventDetailActivity.this,
+                        "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void followOrganiser(Long organiserId) {
+        ApiService api = RetrofitClient.getInstance(this).create(ApiService.class);
+        SubscriptionPreferenceRequest request = new SubscriptionPreferenceRequest(true, true, 1440);
+        api.subscribeToOrganiser(organiserId, request).enqueue(new Callback<OrganizerSubscriptionResponse>() {
+            @Override
+            public void onResponse(Call<OrganizerSubscriptionResponse> call,
+                                   Response<OrganizerSubscriptionResponse> response) {
+                if (response.isSuccessful()) {
+                    btnFollowOrganiser.setText("Following");
+                    btnFollowOrganiser.setEnabled(false);
+                    Toast.makeText(EventDetailActivity.this,
+                            "Organiser followed", Toast.LENGTH_SHORT).show();
+                } else if (response.code() == 409 || response.code() == 400) {
+                    btnFollowOrganiser.setText("Following");
+                    btnFollowOrganiser.setEnabled(false);
+                    Toast.makeText(EventDetailActivity.this,
+                            "Already following this organiser", Toast.LENGTH_SHORT).show();
+                } else if (response.code() == 401 || response.code() == 403) {
+                    Toast.makeText(EventDetailActivity.this,
+                            "Session expired — please log in again", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(EventDetailActivity.this,
+                            "Could not follow organiser (code " + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OrganizerSubscriptionResponse> call, Throwable t) {
                 Toast.makeText(EventDetailActivity.this,
                         "Cannot reach server: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }

@@ -95,6 +95,18 @@
                 app:checkedIconVisible="false" />
 
             <com.google.android.material.chip.Chip
+                android:id="@+id/chipFollowed"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Followed"
+                app:chipBackgroundColor="@color/chip_bg"
+                app:chipStrokeColor="@color/brand_purple_end"
+                app:chipStrokeWidth="1dp"
+                android:textColor="@color/chip_text"
+                app:checkedIconVisible="false" />
+
+            <com.google.android.material.chip.Chip
                 android:id="@+id/chipDiscover"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"

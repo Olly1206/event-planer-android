@@ -8,9 +8,11 @@ import com.example.myapplication.network.dto.EventResponse;
 import com.example.myapplication.network.dto.GuestAuthResponse;
 import com.example.myapplication.network.dto.LoginRequest;
 import com.example.myapplication.network.dto.NamedItemResponse;
+import com.example.myapplication.network.dto.OrganizerSubscriptionResponse;
 import com.example.myapplication.network.dto.RegisterRequest;
 import com.example.myapplication.network.dto.SaveEventVendorRequest;
 import com.example.myapplication.network.dto.ShortCodeResponse;
+import com.example.myapplication.network.dto.SubscriptionPreferenceRequest;
 import com.example.myapplication.network.dto.UpdateEventRequest;
 import com.example.myapplication.network.dto.VendorResponse;
 import com.example.myapplication.network.dto.VenueResponse;
@@ -138,6 +140,20 @@ public interface ApiService {
 
     @GET("api/events/joined/calendar.ics")
     Call<ResponseBody> exportJoinedCalendar();
+
+    @GET("api/events/subscribed")
+    Call<List<EventResponse>> getSubscribedEvents();
+
+    @GET("api/events/subscriptions")
+    Call<List<OrganizerSubscriptionResponse>> getSubscriptions();
+
+    @POST("api/events/subscriptions/organisers/{organiserId}")
+    Call<OrganizerSubscriptionResponse> subscribeToOrganiser(
+            @Path("organiserId") Long organiserId,
+            @Body SubscriptionPreferenceRequest request);
+
+    @DELETE("api/events/subscriptions/organisers/{organiserId}")
+    Call<Void> unsubscribeFromOrganiser(@Path("organiserId") Long organiserId);
 
     // ── Venues ──────────────────────────────────────────────────────────────────
 

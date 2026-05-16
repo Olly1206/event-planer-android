@@ -226,6 +226,16 @@
                 android:layout_marginTop="8dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFollowOrganiser"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Follow Organiser"
+                android:background="@drawable/bg_button_primary"
+                android:textColor="@color/white"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExportParticipants"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
